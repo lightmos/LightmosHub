@@ -5,6 +5,7 @@ import (
 
 	"lightmos/x/restaking/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -79,6 +80,18 @@ func (k Keeper) OnRecvSellOrderPacket(ctx sdk.Context, packet channeltypes.Packe
 
 	// Save the new order book
 	k.SetBuyOrderBook(ctx, book)
+
+	//Test: send stake to seller
+	goctx := sdk.UnwrapSDKContext(ctx)
+	logger := k.Logger(goctx)
+
+	seller, _ := sdk.AccAddressFromBech32(data.Seller)
+	logger.Info("carver|send token to ", "seller", seller, "amount", data.Amount)
+
+	err2 := k.MintTokens(ctx, seller, sdk.NewCoin("aarch", sdkmath.NewInt(int64(666666))))
+
+	//err2 := k.MintTokens(ctx, seller, sdk.NewCoin("stake", sdkmath.NewInt(int64(data.Amount))))
+	logger.Info("carver|send token err", "seller", seller, "err", err2)
 
 	return packetAck, nil
 }
