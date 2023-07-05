@@ -1,0 +1,13 @@
+syntax = "proto3";
+package lightmos.restaking;
+
+option go_package = "lightmos/x/restaking/types";
+
+message DenomTrace {
+  string index = 1; 
+  string port = 2; 
+  string channel = 3; 
+  string origin = 4; 
+  
+}
+
