@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"lightmos/x/restaking/types"
 )
 
@@ -15,3 +16,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 var _ types.MsgServer = msgServer{}
+
+func (k msgServer) CreateValidator(goCtx context.Context, validator *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
+	return nil, nil
+}

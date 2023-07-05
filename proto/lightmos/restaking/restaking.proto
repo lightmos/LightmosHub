@@ -1,0 +1,66 @@
+syntax = "proto3";
+package lightmos.restaking;
+
+option go_package = "lightmos/x/restaking/types";
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+
+
+// CommissionRates defines the initial commission rates to be used for creating
+// a validator.
+message CommissionRates {
+    option (gogoproto.equal)            = true;
+    option (gogoproto.goproto_stringer) = true;
+  
+    // rate is the commission rate charged to delegators, as a fraction.
+    string rate = 1 [
+      (cosmos_proto.scalar)  = "cosmos.Dec",
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable)   = false
+    ];
+    // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
+    string max_rate = 2 [
+      (cosmos_proto.scalar)  = "cosmos.Dec",
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable)   = false
+    ];
+    // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
+    string max_change_rate = 3 [
+      (cosmos_proto.scalar)  = "cosmos.Dec",
+      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+      (gogoproto.nullable)   = false
+    ];
+  }
+  
+  // Commission defines commission parameters for a given validator.
+  message Commission {
+    option (gogoproto.equal)            = true;
+    option (gogoproto.goproto_stringer) = true;
+  
+    // commission_rates defines the initial commission rates to be used for creating a validator.
+    CommissionRates commission_rates = 1 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+    // update_time is the last time the commission rate was changed.
+    google.protobuf.Timestamp update_time = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  }
+
+  // Description defines a validator description.
+message Description {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = true;
+
+  // moniker defines a human-readable name for the validator.
+  string moniker = 1;
+  // identity defines an optional identity signature (ex. UPort or Keybase).
+  string identity = 2;
+  // website defines an optional website link.
+  string website = 3;
+  // security_contact defines an optional email for security contact.
+  string security_contact = 4;
+  // details define other optional details.
+  string details = 5;
+}
