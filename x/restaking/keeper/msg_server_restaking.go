@@ -35,7 +35,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, validator *types.MsgCr
 		Value:             cosmostypes.Coin(validator.Value),
 	}
 
-	// ## simple test restakeValidator ##
+	// TODO create ibc packet
 	res, err := k.stakingKeeper.RestakeValidator(goCtx, cosmosValidator)
 	if err != nil {
 		logger.Info("carver|createValidator-end", "err", err.Error())

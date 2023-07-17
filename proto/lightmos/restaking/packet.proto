@@ -2,6 +2,14 @@ syntax = "proto3";
 
 package lightmos.restaking;
 
+import "cosmos_proto/cosmos.proto";
+import "lightmos/restaking/coin.proto";
+import "lightmos/restaking/restaking.proto";
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
 option go_package = "lightmos/x/restaking/types";
 
 message RestakingPacketData {
@@ -10,6 +18,7 @@ message RestakingPacketData {
     CreatePairPacketData createPairPacket = 2;
     SellOrderPacketData  sellOrderPacket  = 3;
     BuyOrderPacketData   buyOrderPacket   = 4;
+    RestakePacketData    restakePacket    = 5;
   }
 }
 
@@ -54,3 +63,17 @@ message BuyOrderPacketAck {
   int32 purchase        = 2;
 }
 
+message RestakePacketData{
+  lightmos.restaking.Description     description         = 1 [(gogoproto.nullable) = false];
+  lightmos.restaking.CommissionRates commission          = 2 [(gogoproto.nullable) = false];
+  string          min_self_delegation = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  lightmos.restaking.Coin value              = 7 [(gogoproto.nullable) = false];
+}
+message RestakePacketDataAck{}
