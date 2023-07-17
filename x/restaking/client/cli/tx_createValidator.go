@@ -11,6 +11,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	channelutils "github.com/cosmos/ibc-go/v7/modules/core/04-channel/client/utils"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -19,8 +20,8 @@ var _ = strconv.Itoa(0)
 
 func CmdCreateValidatorCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-validator",
-		Short: "create new validator initialized with a self-delegation to it",
+		Use:   "restake-validator",
+		Short: "restake new validator initialized with a self-delegation to it",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -47,6 +48,9 @@ func CmdCreateValidatorCmd() *cobra.Command {
 	cmd.Flags().AddFlagSet(flagSetDescriptionCreate())
 	cmd.Flags().AddFlagSet(FlagSetCommissionCreate())
 	cmd.Flags().AddFlagSet(FlagSetMinSelfDelegation())
+	// ibc
+	cmd.Flags().AddFlagSet(FlagSetIbcAttr())
+	cmd.Flags().Uint64(flagPacketTimeoutTimestamp, DefaultRelativePacketTimeoutTimestamp, "Packet timeout timestamp in nanoseconds. Default is 10 minutes.")
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
@@ -56,11 +60,17 @@ func CmdCreateValidatorCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagAmount)
 	_ = cmd.MarkFlagRequired(FlagPubKey)
 	_ = cmd.MarkFlagRequired(FlagMoniker)
+	_ = cmd.MarkFlagRequired(FlagPort)
+	_ = cmd.MarkFlagRequired(FlagChannelId)
 
 	return cmd
 }
 
 func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *flag.FlagSet) (tx.Factory, *types.MsgCreateValidator, error) {
+	creator := clientCtx.GetFromAddress().String()
+	srcPort, _ := fs.GetString(FlagPort)
+	srcChannel, _ := fs.GetString(FlagChannelId)
+
 	fAmount, _ := fs.GetString(FlagAmount)
 
 	amount, err := sdk.ParseCoinNormalized(fAmount)
@@ -110,7 +120,20 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "minimum self delegation must be a positive integer")
 	}
 
-	msg, err := types.NewMsgCreateValidator(
+	// Get the relative timeout timestamp
+	timeoutTimestamp, err := fs.GetUint64(flagPacketTimeoutTimestamp)
+	if err != nil {
+		return txf, nil, err
+	}
+	consensusState, _, _, err := channelutils.QueryLatestConsensusState(clientCtx, srcPort, srcChannel)
+	if err != nil {
+		return txf, nil, err
+	}
+	if timeoutTimestamp != 0 {
+		timeoutTimestamp = consensusState.GetTimestamp() + timeoutTimestamp
+	}
+
+	msg, err := types.NewMsgCreateValidator(creator, srcPort, srcChannel, timeoutTimestamp,
 		sdk.ValAddress(valAddr), pk, amount, description, types.CommissionRates(commissionRates), minSelfDelegation,
 	)
 

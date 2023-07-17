@@ -21,6 +21,10 @@ const (
 
 	FlagNodeID = "node-id"
 	FlagIP     = "ip"
+
+	// ibc
+	FlagPort      = "port"
+	FlagChannelId = "channelId"
 )
 
 // FlagSetPublicKey Returns the flagset for Public Key related operations.
@@ -63,6 +67,16 @@ func FlagSetCommissionCreate() *flag.FlagSet {
 	fs.String(FlagCommissionRate, "", "The initial commission rate percentage")
 	fs.String(FlagCommissionMaxRate, "", "The maximum commission rate percentage")
 	fs.String(FlagCommissionMaxChangeRate, "", "The maximum commission change rate percentage (per day)")
+
+	return fs
+}
+
+// FlagSetIbcAttr Returns the FlagSet used for ibc attribution create.
+func FlagSetIbcAttr() *flag.FlagSet {
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+
+	fs.String(FlagPort, "", "The ibc port")
+	fs.String(FlagChannelId, "", "The ibc channelId")
 
 	return fs
 }

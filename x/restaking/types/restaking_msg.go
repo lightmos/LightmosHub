@@ -21,6 +21,10 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 }
 
 func NewMsgCreateValidator(
+	creator string,
+	port string,
+	channelID string,
+	timeoutTimestamp uint64,
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey,
 	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
 ) (*MsgCreateValidator, error) {
@@ -43,6 +47,10 @@ func NewMsgCreateValidator(
 		Value:             selfDelegationConvert,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
+		Creator:           creator,
+		Port:              port,
+		ChannelID:         channelID,
+		TimeoutTimestamp:  timeoutTimestamp,
 	}, nil
 }
 
