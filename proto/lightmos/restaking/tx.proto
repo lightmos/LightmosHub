@@ -21,9 +21,7 @@ service Msg {
   rpc SendBuyOrder    (MsgSendBuyOrder   ) returns (MsgSendBuyOrderResponse   );
   rpc CancelSellOrder (MsgCancelSellOrder) returns (MsgCancelSellOrderResponse);
   rpc CancelBuyOrder  (MsgCancelBuyOrder ) returns (MsgCancelBuyOrderResponse );
-   // CreateValidator defines a method for creating a new validator.
-   rpc CreateValidator(MsgCreateValidator) returns (MsgCreateValidatorResponse);
-
+  rpc CreateValidator(MsgCreateValidator) returns (MsgCreateValidatorResponse);
 }
 message MsgSendCreatePair {
   string sourceDenom      = 5;
@@ -102,7 +100,11 @@ message MsgCreateValidator {
   string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
-  lightmos.restaking.Coin value             = 7 [(gogoproto.nullable) = false];
+  lightmos.restaking.Coin value              = 7 [(gogoproto.nullable) = false];
+  string port          = 8;
+  string channelID     = 9;
+  uint64 timeoutTimestamp =10;
+  string creator = 11;
 }
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.

@@ -3,6 +3,9 @@ package restaking
 import (
 	"fmt"
 
+	"lightmos/x/restaking/keeper"
+	"lightmos/x/restaking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
@@ -10,8 +13,6 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	"lightmos/x/restaking/keeper"
-	"lightmos/x/restaking/types"
 )
 
 type IBCModule struct {
