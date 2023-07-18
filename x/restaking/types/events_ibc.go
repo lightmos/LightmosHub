@@ -6,6 +6,8 @@ const (
 	EventTypeCreatePairPacket = "createPair_packet"
 	EventTypeSellOrderPacket  = "sellOrder_packet"
 	EventTypeBuyOrderPacket   = "buyOrder_packet"
+	EventTypeRestakePacket    = "restake_packet"
+
 	// this line is used by starport scaffolding # ibc/packet/event
 
 	AttributeKeyAckSuccess = "success"

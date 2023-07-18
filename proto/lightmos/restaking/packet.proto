@@ -75,5 +75,8 @@ message RestakePacketData{
   string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
   lightmos.restaking.Coin value              = 7 [(gogoproto.nullable) = false];
+  string  restaker = 8 ;
 }
-message RestakePacketDataAck{}
+message RestakePacketDataAck{
+  bool succeed = 1 ;
+}
