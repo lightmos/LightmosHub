@@ -35,6 +35,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdSendBuyOrder())
 	cmd.AddCommand(CmdCancelSellOrder())
 	cmd.AddCommand(CmdCancelBuyOrder())
+	cmd.AddCommand(CmdCreateValidatorCmd())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
