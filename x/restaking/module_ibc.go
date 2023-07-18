@@ -285,6 +285,12 @@ func (im IBCModule) OnAcknowledgementPacket(
 		}
 		eventType = types.EventTypeBuyOrderPacket
 		// this line is used by starport scaffolding # ibc/packet/module/ack
+	case *types.RestakingPacketData_RestakePacket:
+		err := im.keeper.OnAcknowledgementRestakePacket(ctx, modulePacket, *packet.RestakePacket, ack)
+		if err != nil {
+			return err
+		}
+		eventType = types.EventTypeRestakePacket
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s packet type: %T", types.ModuleName, packet)
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)

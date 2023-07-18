@@ -112,3 +112,36 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 	packetAck.Succeed = true
 	return packetAck, nil
 }
+
+// OnAcknowledgementRestakePacket responds to the the success or failure of a packet
+// acknowledgement written on the receiving chain.
+func (k Keeper) OnAcknowledgementRestakePacket(ctx sdk.Context, packet channeltypes.Packet, data types.RestakePacketData, ack channeltypes.Acknowledgement) error {
+	switch ack.Response.(type) {
+	case *channeltypes.Acknowledgement_Error:
+		return k.refundPacketToken(ctx, packet, data)
+	default:
+		// the acknowledgement succeeded on the receiving chain so nothing
+		// needs to be executed and no error needs to be returned
+		return nil
+	}
+}
+
+func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, data types.RestakePacketData) error {
+	// In case of error we unlock the native token
+	receiver, err := sdk.AccAddressFromBech32(data.Restaker)
+	if err != nil {
+		return err
+	}
+
+	if err := k.UnlockTokens(
+		ctx,
+		packet.SourcePort,
+		packet.SourceChannel,
+		receiver,
+		sdk.Coin(data.Value),
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
