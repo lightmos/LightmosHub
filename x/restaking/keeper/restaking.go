@@ -145,3 +145,8 @@ func (k Keeper) refundPacketToken(ctx sdk.Context, packet channeltypes.Packet, d
 
 	return nil
 }
+
+// OnTimeoutRestakePacket responds to the case where a packet has not been transmitted because of a timeout
+func (k Keeper) OnTimeoutRestakePacket(ctx sdk.Context, packet channeltypes.Packet, data types.RestakePacketData) error {
+	return k.refundPacketToken(ctx, packet, data)
+}

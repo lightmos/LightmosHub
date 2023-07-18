@@ -353,6 +353,11 @@ func (im IBCModule) OnTimeoutPacket(
 			return err
 		}
 		// this line is used by starport scaffolding # ibc/packet/module/timeout
+	case *types.RestakingPacketData_RestakePacket:
+		err := im.keeper.OnTimeoutRestakePacket(ctx, modulePacket, *packet.RestakePacket)
+		if err != nil {
+			return err
+		}
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s packet type: %T", types.ModuleName, packet)
 		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
