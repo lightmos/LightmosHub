@@ -35,8 +35,13 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	packet.Pubkey = msg.Pubkey
 	packet.Value = msg.Value
 
+	creator, _ := sdk.AccAddressFromBech32(msg.Creator)
+
+	k.Keeper.Logger(ctx).Info("carver|CreateValidator", "addr", creator,
+		"denom", msg.Value.Denom, "amount", msg.Value.Amount)
+
 	// Lock the tokens
-	if err := k.LockTokens(ctx, msg.Port, msg.ChannelID, sdk.AccAddress(msg.Creator),
+	if err := k.LockTokens(ctx, msg.Port, msg.ChannelID, creator,
 		sdk.NewCoin(msg.Value.Denom,
 			sdkmath.NewInt(msg.Value.Amount.Int64()))); err != nil {
 		return &types.MsgCreateValidatorResponse{}, err
