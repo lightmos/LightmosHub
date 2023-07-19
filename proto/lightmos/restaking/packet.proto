@@ -2,14 +2,17 @@ syntax = "proto3";
 
 package lightmos.restaking;
 
+import "lightmos/base/coin.proto";
+
 option go_package = "lightmos/x/restaking/types";
 
 message RestakingPacketData {
   oneof packet {
-    NoData               noData           = 1;
-    CreatePairPacketData createPairPacket = 2;
-    SellOrderPacketData  sellOrderPacket  = 3;
-    BuyOrderPacketData   buyOrderPacket   = 4;
+    NoData                noData            = 1;
+    CreatePairPacketData  createPairPacket  = 2;
+    SellOrderPacketData   sellOrderPacket   = 3;
+    BuyOrderPacketData    buyOrderPacket    = 4;
+    RetireSharePacketData retireSharePacket = 5;
   }
 }
 
@@ -30,7 +33,7 @@ message SellOrderPacketData {
   int32  amount      = 2;
   string priceDenom  = 3;
   int32  price       = 4;
-  string seller = 5;
+  string seller      = 5;
 }
 
 // SellOrderPacketAck defines a struct for the packet acknowledgment
@@ -45,12 +48,24 @@ message BuyOrderPacketData {
   int32  amount      = 2;
   string priceDenom  = 3;
   int32  price       = 4;
-  string buyer = 5;
+  string buyer       = 5;
 }
 
 // BuyOrderPacketAck defines a struct for the packet acknowledgment
 message BuyOrderPacketAck {
   int32 remainingAmount = 1;
   int32 purchase        = 2;
+}
+
+// RetireSharePacketData defines a struct for the packet payload
+message RetireSharePacketData {
+  string validatorAddress = 1;
+  lightmos.base.Coin amount = 2;
+}
+
+// RetireSharePacketAck defines a struct for the packet acknowledgment
+message RetireSharePacketAck {
+  string  validatorAddress = 1;
+  lightmos.base.Coin remain = 2;
 }
 

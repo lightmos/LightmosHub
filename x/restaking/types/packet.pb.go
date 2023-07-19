@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
+	types "lightmos/types"
 	math "math"
 	math_bits "math/bits"
 )
@@ -28,6 +29,7 @@ type RestakingPacketData struct {
 	//	*RestakingPacketData_CreatePairPacket
 	//	*RestakingPacketData_SellOrderPacket
 	//	*RestakingPacketData_BuyOrderPacket
+	//	*RestakingPacketData_RetireSharePacket
 	Packet isRestakingPacketData_Packet `protobuf_oneof:"packet"`
 }
 
@@ -82,11 +84,15 @@ type RestakingPacketData_SellOrderPacket struct {
 type RestakingPacketData_BuyOrderPacket struct {
 	BuyOrderPacket *BuyOrderPacketData `protobuf:"bytes,4,opt,name=buyOrderPacket,proto3,oneof" json:"buyOrderPacket,omitempty"`
 }
+type RestakingPacketData_RetireSharePacket struct {
+	RetireSharePacket *RetireSharePacketData `protobuf:"bytes,5,opt,name=retireSharePacket,proto3,oneof" json:"retireSharePacket,omitempty"`
+}
 
-func (*RestakingPacketData_NoData) isRestakingPacketData_Packet()           {}
-func (*RestakingPacketData_CreatePairPacket) isRestakingPacketData_Packet() {}
-func (*RestakingPacketData_SellOrderPacket) isRestakingPacketData_Packet()  {}
-func (*RestakingPacketData_BuyOrderPacket) isRestakingPacketData_Packet()   {}
+func (*RestakingPacketData_NoData) isRestakingPacketData_Packet()            {}
+func (*RestakingPacketData_CreatePairPacket) isRestakingPacketData_Packet()  {}
+func (*RestakingPacketData_SellOrderPacket) isRestakingPacketData_Packet()   {}
+func (*RestakingPacketData_BuyOrderPacket) isRestakingPacketData_Packet()    {}
+func (*RestakingPacketData_RetireSharePacket) isRestakingPacketData_Packet() {}
 
 func (m *RestakingPacketData) GetPacket() isRestakingPacketData_Packet {
 	if m != nil {
@@ -123,6 +129,13 @@ func (m *RestakingPacketData) GetBuyOrderPacket() *BuyOrderPacketData {
 	return nil
 }
 
+func (m *RestakingPacketData) GetRetireSharePacket() *RetireSharePacketData {
+	if x, ok := m.GetPacket().(*RestakingPacketData_RetireSharePacket); ok {
+		return x.RetireSharePacket
+	}
+	return nil
+}
+
 // XXX_OneofWrappers is for the internal use of the proto package.
 func (*RestakingPacketData) XXX_OneofWrappers() []interface{} {
 	return []interface{}{
@@ -130,6 +143,7 @@ func (*RestakingPacketData) XXX_OneofWrappers() []interface{} {
 		(*RestakingPacketData_CreatePairPacket)(nil),
 		(*RestakingPacketData_SellOrderPacket)(nil),
 		(*RestakingPacketData_BuyOrderPacket)(nil),
+		(*RestakingPacketData_RetireSharePacket)(nil),
 	}
 }
 
@@ -519,6 +533,112 @@ func (m *BuyOrderPacketAck) GetPurchase() int32 {
 	return 0
 }
 
+// RetireSharePacketData defines a struct for the packet payload
+type RetireSharePacketData struct {
+	ValidatorAddress string      `protobuf:"bytes,1,opt,name=validatorAddress,proto3" json:"validatorAddress,omitempty"`
+	Amount           *types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *RetireSharePacketData) Reset()         { *m = RetireSharePacketData{} }
+func (m *RetireSharePacketData) String() string { return proto.CompactTextString(m) }
+func (*RetireSharePacketData) ProtoMessage()    {}
+func (*RetireSharePacketData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2549f93fea6967e4, []int{8}
+}
+func (m *RetireSharePacketData) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RetireSharePacketData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RetireSharePacketData.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RetireSharePacketData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RetireSharePacketData.Merge(m, src)
+}
+func (m *RetireSharePacketData) XXX_Size() int {
+	return m.Size()
+}
+func (m *RetireSharePacketData) XXX_DiscardUnknown() {
+	xxx_messageInfo_RetireSharePacketData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RetireSharePacketData proto.InternalMessageInfo
+
+func (m *RetireSharePacketData) GetValidatorAddress() string {
+	if m != nil {
+		return m.ValidatorAddress
+	}
+	return ""
+}
+
+func (m *RetireSharePacketData) GetAmount() *types.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return nil
+}
+
+// RetireSharePacketAck defines a struct for the packet acknowledgment
+type RetireSharePacketAck struct {
+	ValidatorAddress string      `protobuf:"bytes,1,opt,name=validatorAddress,proto3" json:"validatorAddress,omitempty"`
+	Remain           *types.Coin `protobuf:"bytes,2,opt,name=remain,proto3" json:"remain,omitempty"`
+}
+
+func (m *RetireSharePacketAck) Reset()         { *m = RetireSharePacketAck{} }
+func (m *RetireSharePacketAck) String() string { return proto.CompactTextString(m) }
+func (*RetireSharePacketAck) ProtoMessage()    {}
+func (*RetireSharePacketAck) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2549f93fea6967e4, []int{9}
+}
+func (m *RetireSharePacketAck) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RetireSharePacketAck) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RetireSharePacketAck.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RetireSharePacketAck) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RetireSharePacketAck.Merge(m, src)
+}
+func (m *RetireSharePacketAck) XXX_Size() int {
+	return m.Size()
+}
+func (m *RetireSharePacketAck) XXX_DiscardUnknown() {
+	xxx_messageInfo_RetireSharePacketAck.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RetireSharePacketAck proto.InternalMessageInfo
+
+func (m *RetireSharePacketAck) GetValidatorAddress() string {
+	if m != nil {
+		return m.ValidatorAddress
+	}
+	return ""
+}
+
+func (m *RetireSharePacketAck) GetRemain() *types.Coin {
+	if m != nil {
+		return m.Remain
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*RestakingPacketData)(nil), "lightmos.restaking.RestakingPacketData")
 	proto.RegisterType((*NoData)(nil), "lightmos.restaking.NoData")
@@ -528,40 +648,48 @@ func init() {
 	proto.RegisterType((*SellOrderPacketAck)(nil), "lightmos.restaking.SellOrderPacketAck")
 	proto.RegisterType((*BuyOrderPacketData)(nil), "lightmos.restaking.BuyOrderPacketData")
 	proto.RegisterType((*BuyOrderPacketAck)(nil), "lightmos.restaking.BuyOrderPacketAck")
+	proto.RegisterType((*RetireSharePacketData)(nil), "lightmos.restaking.RetireSharePacketData")
+	proto.RegisterType((*RetireSharePacketAck)(nil), "lightmos.restaking.RetireSharePacketAck")
 }
 
 func init() { proto.RegisterFile("lightmos/restaking/packet.proto", fileDescriptor_2549f93fea6967e4) }
 
 var fileDescriptor_2549f93fea6967e4 = []byte{
-	// 436 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x94, 0xcf, 0xaa, 0xd3, 0x40,
-	0x14, 0xc6, 0x33, 0xbd, 0x37, 0xa1, 0x9e, 0x0b, 0x56, 0xa7, 0x55, 0x4a, 0x17, 0xb1, 0xcc, 0x42,
-	0xbb, 0x4a, 0x41, 0xfb, 0x02, 0xad, 0x5d, 0xb8, 0xd2, 0x92, 0x82, 0x60, 0x77, 0xd3, 0x38, 0xa4,
-	0x21, 0xcd, 0x1f, 0x26, 0x13, 0xb0, 0x6f, 0xe1, 0x5a, 0xf0, 0x7d, 0x5c, 0x76, 0xe1, 0xc2, 0xa5,
-	0xb4, 0x2f, 0x22, 0x99, 0x99, 0x84, 0x24, 0xcd, 0xc6, 0xcd, 0xdd, 0xe5, 0x3b, 0x7c, 0xe7, 0x37,
-	0xe7, 0x7c, 0x81, 0x03, 0xaf, 0x8e, 0x81, 0x7f, 0x10, 0x51, 0x92, 0xcd, 0x39, 0xcb, 0x04, 0x0d,
-	0x83, 0xd8, 0x9f, 0xa7, 0xd4, 0x0b, 0x99, 0x70, 0x52, 0x9e, 0x88, 0x04, 0xe3, 0xd2, 0xe0, 0x54,
-	0x06, 0xf2, 0xbb, 0x07, 0x43, 0xb7, 0x54, 0x1b, 0xe9, 0x5e, 0x53, 0x41, 0xf1, 0x02, 0xac, 0x38,
-	0x29, 0xbe, 0xc6, 0x68, 0x8a, 0x66, 0x0f, 0x6f, 0x27, 0xce, 0x6d, 0xb3, 0xf3, 0x51, 0x3a, 0x3e,
-	0x18, 0xae, 0xf6, 0xe2, 0xcf, 0xf0, 0xcc, 0xe3, 0x8c, 0x0a, 0xb6, 0xa1, 0x01, 0x57, 0xb4, 0x71,
-	0x4f, 0xf6, 0xcf, 0xba, 0xfa, 0xdf, 0xb7, 0xbc, 0x9a, 0x76, 0xc3, 0xc0, 0x5b, 0x18, 0x64, 0xec,
-	0x78, 0xfc, 0xc4, 0xbf, 0xb2, 0x12, 0x7b, 0x27, 0xb1, 0x6f, 0xba, 0xb0, 0xdb, 0xa6, 0x55, 0x53,
-	0xdb, 0x04, 0xbc, 0x81, 0xa7, 0xfb, 0xfc, 0x54, 0x67, 0xde, 0x4b, 0xe6, 0xeb, 0x2e, 0xe6, 0xaa,
-	0xe1, 0xd4, 0xc8, 0x56, 0xff, 0xaa, 0x0f, 0x96, 0x0a, 0x9c, 0xf4, 0xc1, 0x52, 0xe1, 0x90, 0x1d,
-	0x8c, 0xba, 0xd6, 0xc4, 0x53, 0x78, 0xc8, 0x92, 0x9c, 0x7b, 0x6c, 0xcd, 0xe2, 0x24, 0x92, 0x29,
-	0x3f, 0x71, 0xeb, 0xa5, 0xc2, 0x21, 0x28, 0xf7, 0x99, 0x50, 0x8e, 0x9e, 0x72, 0xd4, 0x4a, 0xe4,
-	0x05, 0x0c, 0xdb, 0xec, 0xa5, 0x17, 0x92, 0x9f, 0x08, 0x86, 0x1d, 0x19, 0x14, 0x40, 0x1a, 0x25,
-	0x79, 0x2c, 0x1a, 0x4f, 0xd6, 0x4a, 0xf8, 0x25, 0x58, 0x4a, 0xca, 0xd7, 0x4c, 0x57, 0x2b, 0x6c,
-	0x03, 0xa4, 0x3c, 0x28, 0x67, 0xbd, 0x93, 0x8d, 0xb5, 0x0a, 0x1e, 0x81, 0x29, 0x95, 0x4c, 0xd0,
-	0x74, 0x95, 0x28, 0x68, 0x45, 0xe6, 0x8c, 0x8f, 0x4d, 0xd9, 0xa1, 0x15, 0x71, 0x01, 0xb7, 0xc6,
-	0x5b, 0x7a, 0x21, 0x9e, 0xc1, 0x80, 0xb3, 0x88, 0x06, 0x71, 0x10, 0xfb, 0x4b, 0x35, 0x04, 0x92,
-	0xb4, 0x76, 0x19, 0x63, 0xb8, 0xf7, 0x69, 0x10, 0xeb, 0x19, 0xe5, 0x37, 0xf9, 0x81, 0x00, 0xdf,
-	0xfe, 0xa3, 0x47, 0x5f, 0x79, 0x04, 0xe6, 0x3e, 0x3f, 0x55, 0x1b, 0x2b, 0x41, 0xbe, 0xc0, 0xf3,
-	0xe6, 0x6c, 0xff, 0xb7, 0xef, 0x04, 0xfa, 0x69, 0xce, 0xbd, 0x03, 0xcd, 0x98, 0x1e, 0xb2, 0xd2,
-	0xab, 0xc5, 0xaf, 0x8b, 0x8d, 0xce, 0x17, 0x1b, 0xfd, 0xbd, 0xd8, 0xe8, 0xfb, 0xd5, 0x36, 0xce,
-	0x57, 0xdb, 0xf8, 0x73, 0xb5, 0x8d, 0xdd, 0xa4, 0x3a, 0x07, 0xdf, 0x6a, 0x07, 0x41, 0x9c, 0x52,
-	0x96, 0xed, 0x2d, 0x79, 0x10, 0xde, 0xfd, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x40, 0x2a, 0xda, 0x31,
-	0x33, 0x04, 0x00, 0x00,
+	// 534 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x94, 0xcd, 0x6a, 0xdb, 0x40,
+	0x10, 0xc7, 0xad, 0x24, 0x16, 0xce, 0x18, 0x9a, 0x64, 0xed, 0x14, 0xe3, 0x83, 0x1a, 0xf6, 0xd0,
+	0xba, 0x2d, 0xc8, 0x90, 0xe6, 0x05, 0xec, 0xe4, 0xd0, 0x53, 0x6b, 0x64, 0x28, 0x24, 0xb7, 0xb5,
+	0xbc, 0xc8, 0x8b, 0x6d, 0xad, 0x58, 0xad, 0x4a, 0xfd, 0x16, 0x3d, 0x17, 0xfa, 0x0c, 0x7d, 0x8d,
+	0x1e, 0x73, 0xec, 0xb1, 0xd8, 0x2f, 0x52, 0xb4, 0xbb, 0x52, 0xf5, 0x45, 0x21, 0x97, 0xde, 0x76,
+	0x86, 0xff, 0xfc, 0xe6, 0x4b, 0x1a, 0x78, 0xb1, 0x61, 0xc1, 0x4a, 0x6e, 0x79, 0x3c, 0x16, 0x34,
+	0x96, 0x64, 0xcd, 0xc2, 0x60, 0x1c, 0x11, 0x7f, 0x4d, 0xa5, 0x1b, 0x09, 0x2e, 0x39, 0x42, 0x99,
+	0xc0, 0xcd, 0x05, 0xc3, 0x41, 0x1e, 0xb4, 0x20, 0x31, 0x1d, 0xfb, 0x9c, 0x85, 0x5a, 0x8d, 0x7f,
+	0x1c, 0x43, 0xcf, 0xcb, 0x74, 0x33, 0xc5, 0xb9, 0x23, 0x92, 0xa0, 0x1b, 0xb0, 0x43, 0x9e, 0xbe,
+	0x06, 0xd6, 0x95, 0x35, 0xea, 0x5e, 0x0f, 0xdd, 0x3a, 0xd6, 0xfd, 0xa0, 0x14, 0xef, 0x5b, 0x9e,
+	0xd1, 0xa2, 0x4f, 0x70, 0xee, 0x0b, 0x4a, 0x24, 0x9d, 0x11, 0x26, 0x34, 0x6d, 0x70, 0xa4, 0xe2,
+	0x47, 0x4d, 0xf1, 0xb7, 0x15, 0xad, 0xa1, 0xd5, 0x18, 0x68, 0x0e, 0x67, 0x31, 0xdd, 0x6c, 0x3e,
+	0x8a, 0x25, 0xcd, 0xb0, 0xc7, 0x0a, 0xfb, 0xaa, 0x09, 0x3b, 0x2f, 0x4b, 0x0d, 0xb5, 0x4a, 0x40,
+	0x33, 0x78, 0xb6, 0x48, 0x76, 0x45, 0xe6, 0x89, 0x62, 0xbe, 0x6c, 0x62, 0x4e, 0x4b, 0x4a, 0x83,
+	0xac, 0xc4, 0xa3, 0x7b, 0xb8, 0x10, 0x54, 0x32, 0x41, 0xe7, 0x2b, 0x22, 0xa8, 0x81, 0xb6, 0x15,
+	0xf4, 0x75, 0x13, 0xd4, 0xab, 0x8a, 0x0d, 0xb7, 0x4e, 0x99, 0x76, 0xc0, 0xd6, 0x5b, 0xc6, 0x1d,
+	0xb0, 0xf5, 0xdc, 0xf1, 0x03, 0xf4, 0x9b, 0x26, 0x88, 0xae, 0xa0, 0x1b, 0xf3, 0x44, 0xf8, 0xf4,
+	0x8e, 0x86, 0x7c, 0xab, 0x16, 0x78, 0xea, 0x15, 0x5d, 0xa9, 0x42, 0x12, 0x11, 0x50, 0xa9, 0x15,
+	0x47, 0x5a, 0x51, 0x70, 0xe1, 0x4b, 0xe8, 0x55, 0xd9, 0x13, 0x7f, 0x8d, 0xbf, 0x5b, 0xd0, 0x6b,
+	0x18, 0x6f, 0x0a, 0x24, 0x5b, 0x9e, 0x84, 0xb2, 0x94, 0xb2, 0xe0, 0x42, 0xcf, 0xc1, 0xd6, 0xa6,
+	0xca, 0xd6, 0xf6, 0x8c, 0x85, 0x1c, 0x80, 0x48, 0xb0, 0xac, 0xd6, 0x63, 0x15, 0x58, 0xf0, 0xa0,
+	0x3e, 0xb4, 0x95, 0xa5, 0x96, 0xd3, 0xf6, 0xb4, 0x91, 0xd2, 0xd2, 0x75, 0x52, 0xa1, 0xc6, 0x7b,
+	0xea, 0x19, 0x0b, 0x7b, 0x80, 0x2a, 0xe5, 0x4d, 0xfc, 0x35, 0x1a, 0xc1, 0x99, 0xa0, 0x5b, 0xc2,
+	0x42, 0x16, 0x06, 0x13, 0x5d, 0x84, 0xa5, 0x68, 0x55, 0x37, 0x42, 0x70, 0x12, 0x10, 0x16, 0x9a,
+	0x1a, 0xd5, 0x1b, 0x7f, 0xb3, 0x00, 0xd5, 0xd7, 0xff, 0xdf, 0x5b, 0xee, 0x43, 0x7b, 0x91, 0xec,
+	0xf2, 0x8e, 0xb5, 0x81, 0xef, 0xe1, 0xa2, 0x5c, 0xdb, 0xd3, 0xfa, 0x1d, 0x42, 0x27, 0x4a, 0x84,
+	0xbf, 0x22, 0x31, 0x35, 0x45, 0xe6, 0x36, 0x8e, 0xe0, 0xb2, 0xf1, 0x03, 0x45, 0x6f, 0xe0, 0xfc,
+	0x33, 0xd9, 0xb0, 0x25, 0x91, 0x5c, 0x4c, 0x96, 0x4b, 0x41, 0xe3, 0xd8, 0xb4, 0x5f, 0xf3, 0xa3,
+	0xb7, 0xa5, 0x19, 0x74, 0xaf, 0x7b, 0x7f, 0xff, 0x83, 0xf4, 0x14, 0xb9, 0xb7, 0x9c, 0x85, 0xd9,
+	0x60, 0x30, 0x87, 0x7e, 0x2d, 0x63, 0xda, 0xcf, 0x13, 0x13, 0xea, 0x26, 0xff, 0x99, 0x50, 0x4b,
+	0xa6, 0x37, 0x3f, 0xf7, 0x8e, 0xf5, 0xb8, 0x77, 0xac, 0xdf, 0x7b, 0xc7, 0xfa, 0x7a, 0x70, 0x5a,
+	0x8f, 0x07, 0xa7, 0xf5, 0xeb, 0xe0, 0xb4, 0x1e, 0x86, 0xf9, 0xc5, 0xfc, 0x52, 0x38, 0xb4, 0x72,
+	0x17, 0xd1, 0x78, 0x61, 0xab, 0xd3, 0xf9, 0xee, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xb4, 0xef,
+	0x16, 0x05, 0x8b, 0x05, 0x00, 0x00,
 }
 
 func (m *RestakingPacketData) Marshal() (dAtA []byte, err error) {
@@ -677,6 +805,27 @@ func (m *RestakingPacketData_BuyOrderPacket) MarshalToSizedBuffer(dAtA []byte) (
 		}
 		i--
 		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
+func (m *RestakingPacketData_RetireSharePacket) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RestakingPacketData_RetireSharePacket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RetireSharePacket != nil {
+		{
+			size, err := m.RetireSharePacket.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintPacket(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
 	}
 	return len(dAtA) - i, nil
 }
@@ -937,6 +1086,90 @@ func (m *BuyOrderPacketAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *RetireSharePacketData) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RetireSharePacketData) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RetireSharePacketData) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Amount != nil {
+		{
+			size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintPacket(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintPacket(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RetireSharePacketAck) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RetireSharePacketAck) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RetireSharePacketAck) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Remain != nil {
+		{
+			size, err := m.Remain.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintPacket(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ValidatorAddress) > 0 {
+		i -= len(m.ValidatorAddress)
+		copy(dAtA[i:], m.ValidatorAddress)
+		i = encodeVarintPacket(dAtA, i, uint64(len(m.ValidatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintPacket(dAtA []byte, offset int, v uint64) int {
 	offset -= sovPacket(v)
 	base := offset
@@ -1004,6 +1237,18 @@ func (m *RestakingPacketData_BuyOrderPacket) Size() (n int) {
 	_ = l
 	if m.BuyOrderPacket != nil {
 		l = m.BuyOrderPacket.Size()
+		n += 1 + l + sovPacket(uint64(l))
+	}
+	return n
+}
+func (m *RestakingPacketData_RetireSharePacket) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RetireSharePacket != nil {
+		l = m.RetireSharePacket.Size()
 		n += 1 + l + sovPacket(uint64(l))
 	}
 	return n
@@ -1123,6 +1368,40 @@ func (m *BuyOrderPacketAck) Size() (n int) {
 	}
 	if m.Purchase != 0 {
 		n += 1 + sovPacket(uint64(m.Purchase))
+	}
+	return n
+}
+
+func (m *RetireSharePacketData) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovPacket(uint64(l))
+	}
+	if m.Amount != nil {
+		l = m.Amount.Size()
+		n += 1 + l + sovPacket(uint64(l))
+	}
+	return n
+}
+
+func (m *RetireSharePacketAck) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorAddress)
+	if l > 0 {
+		n += 1 + l + sovPacket(uint64(l))
+	}
+	if m.Remain != nil {
+		l = m.Remain.Size()
+		n += 1 + l + sovPacket(uint64(l))
 	}
 	return n
 }
@@ -1301,6 +1580,41 @@ func (m *RestakingPacketData) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			m.Packet = &RestakingPacketData_BuyOrderPacket{v}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RetireSharePacket", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPacket
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthPacket
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPacket
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &RetireSharePacketData{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Packet = &RestakingPacketData_RetireSharePacket{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2060,6 +2374,242 @@ func (m *BuyOrderPacketAck) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPacket(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthPacket
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RetireSharePacketData) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPacket
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RetireSharePacketData: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RetireSharePacketData: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPacket
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthPacket
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPacket
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPacket
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthPacket
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPacket
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Amount == nil {
+				m.Amount = &types.Coin{}
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipPacket(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthPacket
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RetireSharePacketAck) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowPacket
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RetireSharePacketAck: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RetireSharePacketAck: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPacket
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthPacket
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthPacket
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Remain", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowPacket
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthPacket
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthPacket
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Remain == nil {
+				m.Remain = &types.Coin{}
+			}
+			if err := m.Remain.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipPacket(dAtA[iNdEx:])

@@ -145,7 +145,6 @@ func (im IBCModule) OnRecvPacket(
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 	var ack channeltypes.Acknowledgement
-
 	// this line is used by starport scaffolding # oracle/packet/module/recv
 
 	var modulePacketData types.RestakingPacketData
@@ -212,6 +211,25 @@ func (im IBCModule) OnRecvPacket(
 				sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", err != nil)),
 			),
 		)
+	case *types.RestakingPacketData_RetireSharePacket:
+		packetAck, err := im.keeper.OnRecvRetireSharePacket(ctx, modulePacket, *packet.RetireSharePacket)
+		if err != nil {
+			ack = channeltypes.NewErrorAcknowledgement(err)
+		} else {
+			// Encode packet acknowledgment
+			packetAckBytes, err := types.ModuleCdc.MarshalJSON(&packetAck)
+			if err != nil {
+				return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrap(sdkerrors.ErrJSONMarshal, err.Error()))
+			}
+			ack = channeltypes.NewResultAcknowledgement(sdk.MustSortJSON(packetAckBytes))
+		}
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeRetireSharePacket,
+				sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+				sdk.NewAttribute(types.AttributeKeyAckSuccess, fmt.Sprintf("%t", err != nil)),
+			),
+		)
 		// this line is used by starport scaffolding # ibc/packet/module/recv
 	default:
 		err := fmt.Errorf("unrecognized %s packet type: %T", types.ModuleName, packet)
@@ -263,6 +281,12 @@ func (im IBCModule) OnAcknowledgementPacket(
 			return err
 		}
 		eventType = types.EventTypeBuyOrderPacket
+	case *types.RestakingPacketData_RetireSharePacket:
+		err := im.keeper.OnAcknowledgementRetireSharePacket(ctx, modulePacket, *packet.RetireSharePacket, ack)
+		if err != nil {
+			return err
+		}
+		eventType = types.EventTypeRetireSharePacket
 		// this line is used by starport scaffolding # ibc/packet/module/ack
 	default:
 		errMsg := fmt.Sprintf("unrecognized %s packet type: %T", types.ModuleName, packet)
@@ -322,6 +346,11 @@ func (im IBCModule) OnTimeoutPacket(
 		}
 	case *types.RestakingPacketData_BuyOrderPacket:
 		err := im.keeper.OnTimeoutBuyOrderPacket(ctx, modulePacket, *packet.BuyOrderPacket)
+		if err != nil {
+			return err
+		}
+	case *types.RestakingPacketData_RetireSharePacket:
+		err := im.keeper.OnTimeoutRetireSharePacket(ctx, modulePacket, *packet.RetireSharePacket)
 		if err != nil {
 			return err
 		}

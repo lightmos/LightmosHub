@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package lightmos.restaking;
 
+import "lightmos/base/coin.proto";
+
 option go_package = "lightmos/x/restaking/types";
 
 // Msg defines the Msg service.
@@ -11,6 +13,7 @@ service Msg {
   rpc SendBuyOrder    (MsgSendBuyOrder   ) returns (MsgSendBuyOrderResponse   );
   rpc CancelSellOrder (MsgCancelSellOrder) returns (MsgCancelSellOrderResponse);
   rpc CancelBuyOrder  (MsgCancelBuyOrder ) returns (MsgCancelBuyOrderResponse );
+  rpc SendRetireShare (MsgSendRetireShare) returns (MsgSendRetireShareResponse);
 }
 message MsgSendCreatePair {
   string sourceDenom      = 5;
@@ -70,4 +73,14 @@ message MsgCancelBuyOrder {
 }
 
 message MsgCancelBuyOrderResponse {}
+
+message MsgSendRetireShare {
+  lightmos.base.Coin amount           = 5;
+  string validatorAddress = 1;
+  string port             = 2;
+  string channelID        = 3;
+  uint64 timeoutTimestamp = 4;
+}
+
+message MsgSendRetireShareResponse {}
 
