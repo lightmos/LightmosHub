@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -51,31 +50,40 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 		return packetAck, types.ErrNoDelegation
 	}
 	log.Info("azh|OnRecvRetireSharePacket", "demo", k.stakingKeeper.BondDenom(ctx), "shares", del.Shares)
-	if k.stakingKeeper.BondDenom(ctx) == "stake" {
-		shares, err := k.stakingKeeper.ValidateUnbondAmount(
-			ctx, accAddr, valAdr, data.Amount.Amount,
-		)
-		if err != nil {
-			return packetAck, err
-		}
-		log.Info("azh|OnRecvRetireSharePacket", "undelegate", shares)
-		_, err = k.stakingKeeper.Undelegate(ctx, accAddr, valAdr, shares)
-		return packetAck, err
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
+	if bondDenom != data.Amount.Denom{
+		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", data.Amount.Denom, bondDenom)
 	}
 
-	return packetAck, errors.New("does`t exit token or doesn`t have")
+	shares, err := k.stakingKeeper.ValidateUnbondAmount(
+		ctx, accAddr, valAdr, data.Amount.Amount,
+	)
+	if err != nil {
+		return packetAck, err
+	}
+	log.Info("azh|OnRecvRetireSharePacket", "undelegate", shares)
+	_, err = k.stakingKeeper.Undelegate(ctx, accAddr, valAdr, shares)
+	if err != nil {
+		return packetAck, err
+	}
+	packetAck.Step = 1
+	log.Info("azh|OnRecvRetireSharePacket undelegate", "coin", sdk.NewCoin(data.Amount.Denom, data.Amount.Amount))
+	err = k.BurnTokens(ctx, accAddr, sdk.NewCoin(data.Amount.Denom, data.Amount.Amount))
+	if err == nil {
+		packetAck.Step = 2
+	}
+	return packetAck, err
 }
 
 // OnAcknowledgementRetireSharePacket responds to the the success or failure of a packet
 // acknowledgement written on the receiving chain.
 func (k Keeper) OnAcknowledgementRetireSharePacket(ctx sdk.Context, packet channeltypes.Packet, data types.RetireSharePacketData, ack channeltypes.Acknowledgement) error {
+	log := k.Logger(ctx)
 	switch dispatchedAck := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 
 		// TODO: failed acknowledgement logic
-		_ = dispatchedAck.Error
-
-		return nil
+		return errors.New(dispatchedAck.Error)
 	case *channeltypes.Acknowledgement_Result:
 		// Decode the packet acknowledgment
 		var packetAck types.RetireSharePacketAck
@@ -86,7 +94,13 @@ func (k Keeper) OnAcknowledgementRetireSharePacket(ctx sdk.Context, packet chann
 		}
 
 		// TODO: successful acknowledgement logic
-
+		log.Info("azh|OnAcknowledgementRetireSharePacket", "dispatchedAck", packetAck.Step)
+		if packetAck.Step == 1 {
+			log.Info("azh|OnAcknowledgementRetireSharePacket unbound")
+		}
+		if packetAck.Step == 2 {
+			log.Info("azh|OnAcknowledgementRetireSharePacket burnTokens")
+		}
 		return nil
 	default:
 		// The counter-party module doesn't implement the correct acknowledgment format

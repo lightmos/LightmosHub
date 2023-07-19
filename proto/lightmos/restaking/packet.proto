@@ -66,6 +66,6 @@ message RetireSharePacketData {
 // RetireSharePacketAck defines a struct for the packet acknowledgment
 message RetireSharePacketAck {
   string  validatorAddress = 1;
-  lightmos.base.Coin remain = 2;
+  int32 step = 2;
 }
 

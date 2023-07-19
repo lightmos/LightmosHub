@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -32,6 +33,9 @@ func CmdSendRetireShare() *cobra.Command {
 			argAmount, err := lightmos.ParseCoinNormalized(args[2])
 			if err != nil {
 				return err
+			}
+			if argAmount.Denom != "token" {
+				return errors.New("the coin demo expect token")
 			}
 
 			// Get the relative timeout timestamp
