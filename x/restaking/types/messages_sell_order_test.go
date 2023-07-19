@@ -3,9 +3,10 @@ package types
 import (
 	"testing"
 
+	"lightmos/testutil/sample"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"lightmos/testutil/sample"
 )
 
 func TestMsgSendSellOrder_ValidateBasic(t *testing.T) {

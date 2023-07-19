@@ -58,6 +58,15 @@ func (k Keeper) TransmitRestakingPacket(
 	}
 
 	packetBytes, err := packetData.GetBytes()
+
+	// test unmarshal
+	var modulePacketData types.RestakingPacketData
+	_ = modulePacketData.Unmarshal(packetBytes)
+	switch packet := modulePacketData.Packet.(type) {
+	case *types.RestakingPacketData_RestakePacket:
+		ctx.Logger().Info("test:packet", "packet", packet.RestakePacket.Pubkey)
+	}
+
 	if err != nil {
 		return 0, sdkerrors.Wrapf(sdkerrors.ErrJSONMarshal, "cannot marshal the packet: %w", err)
 	}
@@ -82,9 +91,9 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 	if err != nil {
 		return packetAck, err
 	}
-	logger.Info("carver|recv restake packet", "restaker", restaker, "denom", sdk.DefaultBondDenom)
+	logger.Info("carver|recv restake packet", "restaker", restaker, "denom", data.Value.Denom, "data", data)
 
-	err = k.MintTokens(ctx, restaker, sdk.NewCoin(sdk.DefaultBondDenom, data.Value.Amount))
+	err = k.MintTokens(ctx, restaker, sdk.NewCoin(data.Value.Denom, data.Value.Amount))
 	if err != nil {
 		return packetAck, err
 	}
@@ -103,12 +112,12 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 	// ## simple test restakeValidator ##
 	_, err = k.stakingKeeper.RestakeValidator(ctx, cosmosValidator)
 	if err != nil {
-		logger.Error("carver|restake Validator err", err.Error())
+		logger.Error("carver|restake Validator err", "err", err.Error())
 		// if restake fail, burn tokens
 		k.BurnTokens(ctx, restaker, sdk.NewCoin(data.Value.Denom, data.Value.Amount))
 		return packetAck, err
 	}
-
+	logger.Info("carver|recv restake handle succeed", "restaker", restaker, "denom", data.Value.Denom)
 	packetAck.Succeed = true
 	return packetAck, nil
 }
@@ -118,6 +127,7 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 func (k Keeper) OnAcknowledgementRestakePacket(ctx sdk.Context, packet channeltypes.Packet, data types.RestakePacketData, ack channeltypes.Acknowledgement) error {
 	switch ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
+		ctx.Logger().Info("caver|OnAcknowledgementRestakePacket err")
 		return k.refundPacketToken(ctx, packet, data)
 	default:
 		// the acknowledgement succeeded on the receiving chain so nothing

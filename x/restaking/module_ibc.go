@@ -215,6 +215,7 @@ func (im IBCModule) OnRecvPacket(
 		)
 	case *types.RestakingPacketData_RestakePacket:
 		packetAck, err := im.keeper.OnRecvRestakePacket(ctx, modulePacket, *packet.RestakePacket)
+		ctx.Logger().Info("carver|OnRecvRestakePacket err", "err", err, "ack", packetAck)
 		if err != nil {
 			ack = channeltypes.NewErrorAcknowledgement(err)
 		} else {
