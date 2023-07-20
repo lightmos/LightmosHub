@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"lightmos/x/restaking/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -94,13 +95,18 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 	packetAck.Succeed = false
 
 	// mint token
+	destDenomFromVocher, flg := k.OriginalDenom(ctx, packet.DestinationPort, packet.DestinationChannel, data.Value.Denom)
+	if !flg {
+		return packetAck, errors.New("invalid denom")
+	}
 	restaker, err := sdk.AccAddressFromBech32(data.Restaker)
 	if err != nil {
 		return packetAck, err
 	}
-	logger.Info("carver|recv restake packet", "restaker", restaker, "denom", data.Value.Denom, "data", data)
+	logger.Info("carver|recv restake packet", "restaker", restaker, "denom", data.Value.Denom,
+		"destDenomFromVocher", destDenomFromVocher, "data", data)
 
-	err = k.MintTokens(ctx, restaker, sdk.NewCoin(data.Value.Denom, data.Value.Amount))
+	err = k.MintTokens(ctx, restaker, sdk.NewCoin(destDenomFromVocher, data.Value.Amount))
 	if err != nil {
 		return packetAck, err
 	}
@@ -113,7 +119,7 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 		DelegatorAddress:  data.DelegatorAddress,
 		ValidatorAddress:  data.ValidatorAddress,
 		Pubkey:            pkAny,
-		Value:             sdk.Coin(data.Value),
+		Value:             sdk.NewCoin(destDenomFromVocher, data.Value.Amount),
 	}
 
 	// ## simple test restakeValidator ##
