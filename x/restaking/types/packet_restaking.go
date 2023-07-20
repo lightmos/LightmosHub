@@ -16,16 +16,18 @@ func NewRestakePacketData(
 	restaker, delegatorAddr, validatorAddr string,
 	pubKey string, selfDelegation Coin, description Description,
 	commission CommissionRates, minSelfDelegation math.Int,
+	destinationChainId string,
 ) (RestakePacketData, error) {
 	return RestakePacketData{
-		Description:       description,
-		Commission:        commission,
-		MinSelfDelegation: minSelfDelegation,
-		DelegatorAddress:  delegatorAddr,
-		ValidatorAddress:  validatorAddr,
-		Pubkey:            pubKey,
-		Value:             selfDelegation,
-		Restaker:          restaker,
+		Description:        description,
+		Commission:         commission,
+		MinSelfDelegation:  minSelfDelegation,
+		DelegatorAddress:   delegatorAddr,
+		ValidatorAddress:   validatorAddr,
+		Pubkey:             pubKey,
+		Value:              selfDelegation,
+		Restaker:           restaker,
+		DestinationChainId: destinationChainId,
 	}, nil
 
 }

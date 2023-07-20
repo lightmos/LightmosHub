@@ -76,6 +76,7 @@ message RestakePacketData{
   string                   pubkey            = 6 ;
   lightmos.restaking.Coin value              = 7 [(gogoproto.nullable) = false];
   string  restaker = 8 ;
+  string  destinationChainId = 9;
 }
 message RestakePacketDataAck{
   bool succeed = 1 ;

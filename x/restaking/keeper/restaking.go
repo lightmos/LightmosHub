@@ -138,13 +138,23 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 // OnAcknowledgementRestakePacket responds to the the success or failure of a packet
 // acknowledgement written on the receiving chain.
 func (k Keeper) OnAcknowledgementRestakePacket(ctx sdk.Context, packet channeltypes.Packet, data types.RestakePacketData, ack channeltypes.Acknowledgement) error {
-	switch ack.Response.(type) {
+	switch dispatchedAck := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 		ctx.Logger().Info("caver|OnAcknowledgementRestakePacket err")
 		return k.refundPacketToken(ctx, packet, data)
+	case *channeltypes.Acknowledgement_Result:
+		// Decode the packet acknowledgment
+		var packetAck types.RestakePacketDataAck
+		if err := types.ModuleCdc.UnmarshalJSON(dispatchedAck.Result, &packetAck); err != nil {
+			// The counter-party module doesn't implement the correct acknowledgment format
+			return errors.New("cannot unmarshal acknowledgment")
+		}
+
+		ctx.Logger().Info("caver|OnAcknowledgementRestakePacket succeed")
+		// save restake validator trace
+		k.SetRestakeValidatorTrace(ctx, data.Restaker, data.DestinationChainId)
+		return nil
 	default:
-		// the acknowledgement succeeded on the receiving chain so nothing
-		// needs to be executed and no error needs to be returned
 		return nil
 	}
 }

@@ -29,6 +29,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		msg.Creator, msg.DelegatorAddress, msg.ValidatorAddress,
 		msg.Pubkey, msg.Value, msg.Description,
 		msg.Commission, msg.MinSelfDelegation,
+		msg.DestinationChainId,
 	)
 
 	creator, _ := sdk.AccAddressFromBech32(msg.Creator)

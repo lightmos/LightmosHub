@@ -20,6 +20,10 @@ const (
 
 	// PortID is the default port id that module binds to
 	PortID = "restaking"
+
+	RestakeKeyPrefix = "Restake/"
+
+	ReadyKeyPrefix = "Ready/"
 )
 
 var (
@@ -33,4 +37,17 @@ func KeyPrefix(p string) []byte {
 
 func OrderBookIndex(portID string, channelID string, sourceDenom string, targetDenom string) string {
 	return fmt.Sprintf("%s-%s-%s-%s", portID, channelID, sourceDenom, targetDenom)
+}
+
+// RestakeServiceKey record key : restaker value : destinationChainId
+func RestakeServiceKey(
+	addr string,
+) []byte {
+	var key []byte
+
+	indexBytes := []byte(addr)
+	key = append(key, indexBytes...)
+	key = append(key, []byte("/")...)
+
+	return key
 }

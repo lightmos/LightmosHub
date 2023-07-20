@@ -105,6 +105,7 @@ message MsgCreateValidator {
   string channelID     = 9;
   uint64 timeoutTimestamp =10;
   string creator = 11;
+  string destinationChainId = 12;
 }
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
