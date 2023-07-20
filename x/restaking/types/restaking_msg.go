@@ -2,39 +2,23 @@ package types
 
 import (
 	"cosmossdk.io/math"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var (
-	_ sdk.Msg                            = &MsgCreateValidator{}
-	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
-	_ sdk.Msg                            = &MsgCreateValidator{}
+	_ sdk.Msg = &MsgCreateValidator{}
+	_ sdk.Msg = &MsgCreateValidator{}
 )
-
-// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
-	var pubKey cryptotypes.PubKey
-	return unpacker.UnpackAny(msg.Pubkey, &pubKey)
-}
 
 func NewMsgCreateValidator(
 	creator string,
 	port string,
 	channelID string,
 	timeoutTimestamp uint64,
-	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey,
+	valAddr sdk.ValAddress, pubKey string,
 	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
 ) (*MsgCreateValidator, error) {
-	var pkAny *codectypes.Any
-	if pubKey != nil {
-		var err error
-		if pkAny, err = codectypes.NewAnyWithValue(pubKey); err != nil {
-			return nil, err
-		}
-	}
 	selfDelegationConvert := Coin{
 		Denom:  selfDelegation.Denom,
 		Amount: selfDelegation.Amount,
@@ -43,7 +27,7 @@ func NewMsgCreateValidator(
 		Description:       description,
 		DelegatorAddress:  sdk.AccAddress(valAddr).String(),
 		ValidatorAddress:  valAddr.String(),
-		Pubkey:            pkAny,
+		Pubkey:            pubKey,
 		Value:             selfDelegationConvert,
 		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
@@ -69,7 +53,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "validator address is invalid")
 	}
 
-	if msg.Pubkey == nil {
+	if msg.Pubkey == "" {
 		return ErrEmptyValidatorPubKey
 	}
 

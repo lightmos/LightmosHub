@@ -99,7 +99,7 @@ message MsgCreateValidator {
   ];
   string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  google.protobuf.Any      pubkey            = 6 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
+  string                   pubkey            = 6 ;
   lightmos.restaking.Coin value              = 7 [(gogoproto.nullable) = false];
   string port          = 8;
   string channelID     = 9;

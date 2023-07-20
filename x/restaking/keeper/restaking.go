@@ -4,6 +4,8 @@ import (
 	"lightmos/x/restaking/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -59,14 +61,6 @@ func (k Keeper) TransmitRestakingPacket(
 
 	packetBytes, err := packetData.GetBytes()
 
-	// test unmarshal
-	var modulePacketData types.RestakingPacketData
-	_ = modulePacketData.Unmarshal(packetBytes)
-	switch packet := modulePacketData.Packet.(type) {
-	case *types.RestakingPacketData_RestakePacket:
-		ctx.Logger().Info("test:packet", "packet", packet.RestakePacket.Pubkey)
-	}
-
 	if err != nil {
 		return 0, sdkerrors.Wrapf(sdkerrors.ErrJSONMarshal, "cannot marshal the packet: %w", err)
 	}
@@ -82,6 +76,19 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 	// validate packet data upon receiving
 	if err := data.ValidateBasic(); err != nil {
 		return packetAck, err
+	}
+
+	var pk cryptotypes.PubKey
+	if err := k.cdc.UnmarshalInterfaceJSON([]byte(data.Pubkey), &pk); err != nil {
+		return packetAck, err
+	}
+
+	var pkAny *codectypes.Any
+	if pk != nil {
+		var err error
+		if pkAny, err = codectypes.NewAnyWithValue(pk); err != nil {
+			return packetAck, err
+		}
 	}
 
 	packetAck.Succeed = false
@@ -105,7 +112,7 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 		MinSelfDelegation: data.MinSelfDelegation,
 		DelegatorAddress:  data.DelegatorAddress,
 		ValidatorAddress:  data.ValidatorAddress,
-		Pubkey:            data.Pubkey,
+		Pubkey:            pkAny,
 		Value:             sdk.Coin(data.Value),
 	}
 

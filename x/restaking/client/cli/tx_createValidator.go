@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	channelutils "github.com/cosmos/ibc-go/v7/modules/core/04-channel/client/utils"
@@ -84,11 +83,6 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, err
 	}
 
-	var pk cryptotypes.PubKey
-	if err := clientCtx.Codec.UnmarshalInterfaceJSON([]byte(pkStr), &pk); err != nil {
-		return txf, nil, err
-	}
-
 	moniker, _ := fs.GetString(FlagMoniker)
 	identity, _ := fs.GetString(FlagIdentity)
 	website, _ := fs.GetString(FlagWebsite)
@@ -134,7 +128,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	}
 
 	msg, err := types.NewMsgCreateValidator(creator, srcPort, srcChannel, timeoutTimestamp,
-		sdk.ValAddress(valAddr), pk, amount, description, types.CommissionRates(commissionRates), minSelfDelegation,
+		sdk.ValAddress(valAddr), pkStr, amount, description, types.CommissionRates(commissionRates), minSelfDelegation,
 	)
 
 	if err != nil {
