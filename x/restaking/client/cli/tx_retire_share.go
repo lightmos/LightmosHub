@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"errors"
 	"strconv"
 
 	lightmos "lightmos/types"
@@ -35,9 +34,9 @@ func CmdSendRetireShare() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if argAmount.Denom != "token" {
-				return errors.New("the coin demo expect token")
-			}
+			// if argAmount.Denom != "token" {
+			// 	return errors.New("the coin demo expect token")
+			// }
 
 			// Get the relative timeout timestamp
 			timeoutTimestamp, err := cmd.Flags().GetUint64(flagPacketTimeoutTimestamp)
