@@ -2,12 +2,13 @@ package keeper
 
 import (
 	"errors"
+	"lightmos/x/restaking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
-	"lightmos/x/restaking/types"
 )
 
 // TransmitRetireSharePacket transmits the packet over IBC with the specified source port and source channel
@@ -41,8 +42,8 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 	}
 	// TODO: packet reception logic
 
-	//accAddr, _ := sdk.AccAddressFromBech32(data.ValidatorAddress)
-	accAddr, _ := sdk.AccAddressFromBech32("cosmos19se8lq7vs33hnvd6qg6wanad36r64r88uh56r6")
+	accAddr, _ := sdk.AccAddressFromBech32(data.ValidatorAddress)
+	//accAddr, _ := sdk.AccAddressFromBech32("cosmos19se8lq7vs33hnvd6qg6wanad36r64r88uh56r6")
 	valAdr := sdk.ValAddress(accAddr)
 	log.Info("azh|OnRecvRetireSharePacket", "accAddr", accAddr)
 	del, found := k.stakingKeeper.GetDelegation(ctx, accAddr, valAdr)
@@ -51,7 +52,7 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 	}
 	log.Info("azh|OnRecvRetireSharePacket", "demo", k.stakingKeeper.BondDenom(ctx), "shares", del.Shares)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
-	if bondDenom != data.Amount.Denom{
+	if bondDenom != data.Amount.Denom {
 		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", data.Amount.Denom, bondDenom)
 	}
 
