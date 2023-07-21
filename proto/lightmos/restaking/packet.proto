@@ -3,22 +3,24 @@ syntax = "proto3";
 package lightmos.restaking;
 
 import "cosmos_proto/cosmos.proto";
-import "lightmos/restaking/coin.proto";
 import "lightmos/restaking/restaking.proto";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
+import "lightmos/base/coin.proto";
+
 
 option go_package = "lightmos/x/restaking/types";
 
 message RestakingPacketData {
   oneof packet {
-    NoData               noData           = 1;
-    CreatePairPacketData createPairPacket = 2;
-    SellOrderPacketData  sellOrderPacket  = 3;
-    BuyOrderPacketData   buyOrderPacket   = 4;
-    RestakePacketData    restakePacket    = 5;
+    NoData               noData            = 1;
+    CreatePairPacketData createPairPacket  = 2;
+    SellOrderPacketData  sellOrderPacket   = 3;
+    BuyOrderPacketData   buyOrderPacket     = 4;
+    RetireSharePacketData retireSharePacket = 5;
+    RestakePacketData    restakePacket      = 6;
   }
 }
 
@@ -39,7 +41,7 @@ message SellOrderPacketData {
   int32  amount      = 2;
   string priceDenom  = 3;
   int32  price       = 4;
-  string seller = 5;
+  string seller      = 5;
 }
 
 // SellOrderPacketAck defines a struct for the packet acknowledgment
@@ -54,7 +56,7 @@ message BuyOrderPacketData {
   int32  amount      = 2;
   string priceDenom  = 3;
   int32  price       = 4;
-  string buyer = 5;
+  string buyer       = 5;
 }
 
 // BuyOrderPacketAck defines a struct for the packet acknowledgment
@@ -74,10 +76,24 @@ message RestakePacketData{
   string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string                   pubkey            = 6 ;
-  lightmos.restaking.Coin value              = 7 [(gogoproto.nullable) = false];
+  lightmos.base.Coin value              = 7 [(gogoproto.nullable) = false];
   string  restaker = 8 ;
   string  destinationChainId = 9;
 }
 message RestakePacketDataAck{
   bool succeed = 1 ;
+}
+
+
+
+// RetireSharePacketData defines a struct for the packet payload
+message RetireSharePacketData {
+  string validatorAddress = 1;
+  lightmos.base.Coin amount = 2;
+}
+
+// RetireSharePacketAck defines a struct for the packet acknowledgment
+message RetireSharePacketAck {
+  string  validatorAddress = 1;
+  int32 step = 2;
 }

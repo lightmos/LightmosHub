@@ -13,6 +13,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSendBuyOrder{}, "restaking/SendBuyOrder", nil)
 	cdc.RegisterConcrete(&MsgCancelSellOrder{}, "restaking/CancelSellOrder", nil)
 	cdc.RegisterConcrete(&MsgCancelBuyOrder{}, "restaking/CancelBuyOrder", nil)
+	cdc.RegisterConcrete(&MsgSendRetireShare{}, "restaking/SendRetireShare", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -31,6 +32,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCancelBuyOrder{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgSendRetireShare{},
 	)
 	// this line is used by starport scaffolding # 3
 

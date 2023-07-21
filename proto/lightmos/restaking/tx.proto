@@ -1,16 +1,14 @@
 syntax = "proto3";
 
 package lightmos.restaking;
-
-
-import "lightmos/restaking/coin.proto";
 import "lightmos/restaking/restaking.proto";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
-
+import "lightmos/base/coin.proto";
 import "cosmos_proto/cosmos.proto";
+
 
 option go_package = "lightmos/x/restaking/types";
 
@@ -22,6 +20,7 @@ service Msg {
   rpc CancelSellOrder (MsgCancelSellOrder) returns (MsgCancelSellOrderResponse);
   rpc CancelBuyOrder  (MsgCancelBuyOrder ) returns (MsgCancelBuyOrderResponse );
   rpc CreateValidator(MsgCreateValidator) returns (MsgCreateValidatorResponse);
+  rpc SendRetireShare (MsgSendRetireShare) returns (MsgSendRetireShareResponse);
 }
 message MsgSendCreatePair {
   string sourceDenom      = 5;
@@ -100,7 +99,7 @@ message MsgCreateValidator {
   string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string                   pubkey            = 6 ;
-  lightmos.restaking.Coin value              = 7 [(gogoproto.nullable) = false];
+  lightmos.base.Coin value              = 7 [(gogoproto.nullable) = false];
   string port          = 8;
   string channelID     = 9;
   uint64 timeoutTimestamp =10;
@@ -110,3 +109,14 @@ message MsgCreateValidator {
 
 // MsgCreateValidatorResponse defines the Msg/CreateValidator response type.
 message MsgCreateValidatorResponse {}
+
+
+message MsgSendRetireShare {
+  lightmos.base.Coin amount           = 5;
+  string validatorAddress = 1;
+  string port             = 2;
+  string channelID        = 3;
+  uint64 timeoutTimestamp = 4;
+}
+
+message MsgSendRetireShareResponse {}
