@@ -53,6 +53,10 @@ func CmdCreateValidatorCmd() *cobra.Command {
 
 	cmd.Flags().String(FlagIP, "", fmt.Sprintf("The node's public IP. It takes effect only when used in combination with --%s", flags.FlagGenerateOnly))
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
+
+	// restaking logic about
+	cmd.Flags().String(FlagDestChainId, "", "chain id of the destination")
+
 	flags.AddTxFlagsToCmd(cmd)
 
 	_ = cmd.MarkFlagRequired(flags.FlagFrom)
@@ -61,6 +65,7 @@ func CmdCreateValidatorCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired(FlagMoniker)
 	_ = cmd.MarkFlagRequired(FlagPort)
 	_ = cmd.MarkFlagRequired(FlagChannelId)
+	_ = cmd.MarkFlagRequired(FlagDestChainId)
 
 	return cmd
 }
@@ -71,6 +76,8 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	srcChannel, _ := fs.GetString(FlagChannelId)
 
 	fAmount, _ := fs.GetString(FlagAmount)
+
+	destChainId, _ := fs.GetString(FlagDestChainId)
 
 	amount, err := sdk.ParseCoinNormalized(fAmount)
 	if err != nil {
@@ -127,7 +134,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		timeoutTimestamp = consensusState.GetTimestamp() + timeoutTimestamp
 	}
 
-	msg, err := types.NewMsgCreateValidator(creator, srcPort, srcChannel, timeoutTimestamp,
+	msg, err := types.NewMsgCreateValidator(destChainId, creator, srcPort, srcChannel, timeoutTimestamp,
 		sdk.ValAddress(valAddr), pkStr, amount, description, types.CommissionRates(commissionRates), minSelfDelegation,
 	)
 

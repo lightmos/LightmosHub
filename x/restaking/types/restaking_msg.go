@@ -14,9 +14,7 @@ var (
 )
 
 func NewMsgCreateValidator(
-	creator string,
-	port string,
-	channelID string,
+	destChainId, creator, port, channelID string,
 	timeoutTimestamp uint64,
 	valAddr sdk.ValAddress, pubKey string,
 	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
@@ -26,17 +24,18 @@ func NewMsgCreateValidator(
 		Amount: selfDelegation.Amount,
 	}
 	return &MsgCreateValidator{
-		Description:       description,
-		DelegatorAddress:  sdk.AccAddress(valAddr).String(),
-		ValidatorAddress:  valAddr.String(),
-		Pubkey:            pubKey,
-		Value:             selfDelegationConvert,
-		Commission:        commission,
-		MinSelfDelegation: minSelfDelegation,
-		Creator:           creator,
-		Port:              port,
-		ChannelID:         channelID,
-		TimeoutTimestamp:  timeoutTimestamp,
+		Description:        description,
+		DelegatorAddress:   sdk.AccAddress(valAddr).String(),
+		ValidatorAddress:   valAddr.String(),
+		Pubkey:             pubKey,
+		Value:              selfDelegationConvert,
+		Commission:         commission,
+		MinSelfDelegation:  minSelfDelegation,
+		Creator:            creator,
+		Port:               port,
+		ChannelID:          channelID,
+		TimeoutTimestamp:   timeoutTimestamp,
+		DestinationChainId: destChainId,
 	}, nil
 }
 

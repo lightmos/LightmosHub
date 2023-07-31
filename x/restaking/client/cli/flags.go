@@ -22,6 +22,8 @@ const (
 	FlagNodeID = "node-id"
 	FlagIP     = "ip"
 
+	FlagDestChainId = "destination-chain-id"
+
 	// ibc
 	FlagPort      = "port"
 	FlagChannelId = "channelId"
