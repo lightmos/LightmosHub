@@ -9,6 +9,7 @@ import "lightmos/restaking/params.proto";
 import "lightmos/restaking/sell_order_book.proto";
 import "lightmos/restaking/buy_order_book.proto";
 import "lightmos/restaking/denom_trace.proto";
+import "lightmos/restaking/restaking.proto";
 
 option go_package = "lightmos/x/restaking/types";
 
@@ -48,6 +49,12 @@ service Query {
   }
   rpc DenomTraceAll (QueryAllDenomTraceRequest) returns (QueryAllDenomTraceResponse) {
     option (google.api.http).get = "/lightmos/restaking/denom_trace";
+  
+  }
+  
+  // Queries a list of RestakerTrace items.
+  rpc RestakerTrace (QueryRestakerTraceRequest) returns (QueryRestakerTraceResponse) {
+    option (google.api.http).get = "/lightmos/restaking/restaker_trace/{accAddr}";
   
   }
 }
@@ -110,5 +117,15 @@ message QueryAllDenomTraceRequest {
 message QueryAllDenomTraceResponse {
   repeated DenomTrace                             denomTrace = 1 [(gogoproto.nullable) = false];
            cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryRestakerTraceRequest {
+  string                                accAddr    = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryRestakerTraceResponse {
+  repeated RestakerTrace                             restakerTrace = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination  = 2;
 }
 

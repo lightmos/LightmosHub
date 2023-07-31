@@ -40,13 +40,14 @@ func OrderBookIndex(portID string, channelID string, sourceDenom string, targetD
 }
 
 // RestakeServiceKey record key : restaker value : destinationChainId
-func RestakeServiceKey(
+func RestakerTraceKey(
 	addr string,
+	destChainId string,
 ) []byte {
 	var key []byte
 
-	indexBytes := []byte(addr)
-	key = append(key, indexBytes...)
+	key = append(key, []byte(addr)...)
+	key = append(key, []byte(destChainId)...)
 	key = append(key, []byte("/")...)
 
 	return key

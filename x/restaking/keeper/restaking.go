@@ -152,7 +152,11 @@ func (k Keeper) OnAcknowledgementRestakePacket(ctx sdk.Context, packet channelty
 
 		ctx.Logger().Info("caver|OnAcknowledgementRestakePacket succeed")
 		// save restake validator trace
-		k.SetRestakeValidatorTrace(ctx, data.Restaker, data.DestinationChainId)
+		k.SetRestakerTrace(ctx, types.RestakerTrace{
+			Addr:        data.Restaker,
+			DestChainId: data.DestinationChainId,
+			Amount:      data.Value.String(), // locked native token
+		})
 		return nil
 	default:
 		return nil

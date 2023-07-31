@@ -7,36 +7,55 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SetRestakeValidatorTrace set a specific validatorTrace in the store from its index
-func (k Keeper) SetRestakeValidatorTrace(ctx sdk.Context, restaker string, destinationChainId string) {
+// SetRestakerTrace set a specific validatorTrace in the store from its index
+func (k Keeper) SetRestakerTrace(ctx sdk.Context, rt types.RestakerTrace) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RestakeKeyPrefix))
-	store.Set(types.RestakeServiceKey(restaker), []byte(destinationChainId))
+	b := k.cdc.MustMarshal(&rt)
+	store.Set(types.RestakerTraceKey(rt.Addr, rt.DestChainId), b)
 }
 
-func (k Keeper) GetRestakeValidatorTrace(
+// GetRestakerTrace returns a restakerTrace from its index
+func (k Keeper) GetRestakerTrace(
 	ctx sdk.Context,
-	restaker string,
-) (destinationChainId string, found bool) {
+	addr, destChainId string,
+) (val types.RestakerTrace, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RestakeKeyPrefix))
 
-	b := store.Get(types.RestakeServiceKey(
-		restaker,
+	b := store.Get(types.RestakerTraceKey(
+		addr,
+		destChainId,
 	))
 	if b == nil {
-		return destinationChainId, false
+		return val, false
 	}
 
-	return string(b), true
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
 }
 
-// RemoveRestakeValidatorTrace will set restake validator trace as empty
-func (k Keeper) RemoveRestakeValidatorTrace(
+// RemoveRestakerTrace removes a restakerTrace from the store
+func (k Keeper) RemoveRestakerTrace(
 	ctx sdk.Context,
-	restaker string,
-) bool {
-	if _, found := k.GetRestakeValidatorTrace(ctx, restaker); found {
-		k.SetRestakeValidatorTrace(ctx, restaker, "")
-		return true
+	addr, destChainId string,
+) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RestakeKeyPrefix))
+	store.Delete(types.RestakerTraceKey(
+		addr, destChainId,
+	))
+}
+
+// GetAllRestakerTrace returns all restakerTrace
+func (k Keeper) GetAllRestakerTrace(ctx sdk.Context) (list []types.RestakerTrace) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RestakeKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.RestakerTrace
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
 	}
-	return false
+
+	return
 }
