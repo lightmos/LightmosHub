@@ -7,9 +7,9 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
+	_ "lightmos/types/tx/amino"
 	math "math"
 	math_bits "math/bits"
 )

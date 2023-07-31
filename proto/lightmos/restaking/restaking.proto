@@ -64,3 +64,9 @@ message Description {
   // details define other optional details.
   string details = 5;
 }
+
+message RestakerTrace{
+  string addr = 1; 
+  string destChainId = 2; 
+  string amount = 3;
+}
