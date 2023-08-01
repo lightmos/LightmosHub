@@ -34,6 +34,7 @@ type (
 
 		bankKeeper    types.BankKeeper
 		stakingKeeper types.StakingKeeper
+		accountKeeper types.AccountKeeper
 	}
 )
 
@@ -48,6 +49,7 @@ func NewKeeper(
 
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
+	accountKeeper types.AccountKeeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -66,6 +68,7 @@ func NewKeeper(
 
 		bankKeeper:    bankKeeper,
 		stakingKeeper: stakingKeeper,
+		accountKeeper: accountKeeper,
 	}
 }
 
@@ -222,6 +225,7 @@ func (k Keeper) SafeMint(ctx sdk.Context, port string, channel string, receiver 
 		if err := k.MintTokens(ctx, receiver, sdk.NewCoin(denom, sdkmath.NewInt(int64(amount)))); err != nil {
 			return err
 		}
+
 	} else {
 		// Unlock native tokens
 		if err := k.UnlockTokens(

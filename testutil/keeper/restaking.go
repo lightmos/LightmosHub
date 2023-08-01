@@ -88,6 +88,7 @@ func RestakingKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		capabilityKeeper.ScopeToModule("RestakingScopedKeeper"),
 		nil,
 		nil,
+		nil,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, logger)

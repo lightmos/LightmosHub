@@ -65,6 +65,7 @@ func (k Keeper) OnRecvBuyOrderPacket(ctx sdk.Context, packet channeltypes.Packet
 		// If it was not from this chain we use voucher as denom
 		finalPriceDenom = VoucherDenom(packet.SourcePort, packet.SourceChannel, data.PriceDenom)
 	}
+	bondDemo := k.stakingKeeper.BondDenom(ctx)
 
 	// Dispatch liquidated buy order
 	for _, liquidation := range liquidated {
@@ -84,6 +85,17 @@ func (k Keeper) OnRecvBuyOrderPacket(ctx sdk.Context, packet channeltypes.Packet
 		); err != nil {
 			return packetAck, err
 		}
+
+		if bondDemo == book.PriceDenom {
+			err := k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Buyer, liquidation.Creator, liquidation.Price, liquidation.Amount)
+			if err != nil {
+				return packetAck, err
+			} else {
+				packetAck.Seller = liquidation.Creator
+			}
+		}
+		//packetAck.Seller = addr.String()
+		//packetAck.Price = liquidation.Price
 	}
 
 	// Save the new order book
@@ -146,13 +158,14 @@ func (k Keeper) OnAcknowledgementBuyOrderPacket(ctx sdk.Context, packet channelt
 			k.SetBuyOrderBook(ctx, book)
 		}
 
+		bondDemo := k.stakingKeeper.BondDenom(ctx)
+
 		// Mint the purchase
 		if packetAck.Purchase > 0 {
 			receiver, err := sdk.AccAddressFromBech32(data.Buyer)
 			if err != nil {
 				return err
 			}
-
 			finalAmountDenom, saved := k.OriginalDenom(ctx, packet.SourcePort, packet.SourceChannel, data.AmountDenom)
 			if !saved {
 				// If it was not from this chain we use voucher as denom
@@ -168,6 +181,14 @@ func (k Keeper) OnAcknowledgementBuyOrderPacket(ctx sdk.Context, packet channelt
 				packetAck.Purchase,
 			); err != nil {
 				return err
+			}
+			k.Logger(ctx).Info("azh|OnAcknowledgementBuyOrderPacket", "receiver", packetAck.Seller,
+				"finalAmountDenom", finalAmountDenom, "purchase", packetAck.Purchase, "price", packetAck.Price)
+			if bondDemo == book.PriceDenom {
+				err := k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Buyer, packetAck.Seller, data.Price, packetAck.Purchase)
+				if err != nil {
+					return err
+				}
 			}
 		}
 

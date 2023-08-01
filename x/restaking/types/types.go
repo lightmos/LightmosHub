@@ -169,6 +169,9 @@ func (b *BuyOrderBook) LiquidateFromSellOrder(order Order) (
 
 	// Check if match
 	highestBid := b.Book.Orders[orderCount-1]
+	if highestBid.Agree == false {
+		return order, liquidatedBuyOrder, gain, false, false
+	}
 	if order.Price > highestBid.Price {
 		return order, liquidatedBuyOrder, gain, false, false
 	}
@@ -256,6 +259,9 @@ func (s *SellOrderBook) LiquidateFromBuyOrder(order Order) (
 
 	// Check if match
 	lowestAsk := s.Book.Orders[orderCount-1]
+	if lowestAsk.Agree == false {
+		return order, liquidatedSellOrder, purchase, false, false
+	}
 	if order.Price < lowestAsk.Price {
 		return order, liquidatedSellOrder, purchase, false, false
 	}

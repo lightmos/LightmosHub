@@ -6,18 +6,18 @@ import (
 	"lightmos/types"
 )
 
-const TypeMsgSendRetireShare = "send_retire_share"
+const TypeMsgSendUndelegate = "send_undelegate"
 
-var _ sdk.Msg = &MsgSendRetireShare{}
+var _ sdk.Msg = &MsgSendUndelegate{}
 
-func NewMsgSendRetireShare(
+func NewMsgSendUndelegate(
 	validatorAddress string,
 	port string,
 	channelID string,
 	timeoutTimestamp uint64,
 	amount *types.Coin,
-) *MsgSendRetireShare {
-	return &MsgSendRetireShare{
+) *MsgSendUndelegate {
+	return &MsgSendUndelegate{
 		ValidatorAddress: validatorAddress,
 		Port:             port,
 		ChannelID:        channelID,
@@ -26,15 +26,15 @@ func NewMsgSendRetireShare(
 	}
 }
 
-func (msg *MsgSendRetireShare) Route() string {
+func (msg *MsgSendUndelegate) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgSendRetireShare) Type() string {
-	return TypeMsgSendRetireShare
+func (msg *MsgSendUndelegate) Type() string {
+	return TypeMsgSendUndelegate
 }
 
-func (msg *MsgSendRetireShare) GetSigners() []sdk.AccAddress {
+func (msg *MsgSendUndelegate) GetSigners() []sdk.AccAddress {
 	validatorAddress, err := sdk.AccAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		panic(err)
@@ -42,12 +42,12 @@ func (msg *MsgSendRetireShare) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{validatorAddress}
 }
 
-func (msg *MsgSendRetireShare) GetSignBytes() []byte {
+func (msg *MsgSendUndelegate) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgSendRetireShare) ValidateBasic() error {
+func (msg *MsgSendUndelegate) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid validatorAddress address (%s)", err)

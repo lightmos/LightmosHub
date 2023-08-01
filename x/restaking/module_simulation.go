@@ -31,6 +31,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCancelBuyOrder int = 100
 
+	opWeightMsgChangePairState = "op_weight_msg_change_pair_state"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgChangePairState int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -82,6 +86,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		restakingsimulation.SimulateMsgCancelBuyOrder(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgChangePairState int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgChangePairState, &weightMsgChangePairState, nil,
+		func(_ *rand.Rand) {
+			weightMsgChangePairState = defaultWeightMsgChangePairState
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgChangePairState,
+		restakingsimulation.SimulateMsgChangePairState(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -103,6 +118,14 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgCancelBuyOrder,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				restakingsimulation.SimulateMsgCancelBuyOrder(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgChangePairState,
+			defaultWeightMsgChangePairState,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				restakingsimulation.SimulateMsgChangePairState(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

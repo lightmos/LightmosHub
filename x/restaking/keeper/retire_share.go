@@ -43,14 +43,8 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 	// TODO: packet reception logic
 
 	accAddr, _ := sdk.AccAddressFromBech32(data.ValidatorAddress)
-	//accAddr, _ := sdk.AccAddressFromBech32("cosmos19se8lq7vs33hnvd6qg6wanad36r64r88uh56r6")
 	valAdr := sdk.ValAddress(accAddr)
 	log.Info("azh|OnRecvRetireSharePacket", "accAddr", accAddr)
-	del, found := k.stakingKeeper.GetDelegation(ctx, accAddr, valAdr)
-	if !found {
-		return packetAck, types.ErrNoDelegation
-	}
-	log.Info("azh|OnRecvRetireSharePacket", "demo", k.stakingKeeper.BondDenom(ctx), "shares", del.Shares)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	if bondDenom != data.Amount.Denom {
 		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", data.Amount.Denom, bondDenom)
@@ -62,18 +56,14 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 	if err != nil {
 		return packetAck, err
 	}
-	log.Info("azh|OnRecvRetireSharePacket", "undelegate", shares)
-	_, err = k.stakingKeeper.Undelegate(ctx, accAddr, valAdr, shares)
+	endTime, err := k.stakingKeeper.Undelegate(ctx, accAddr, valAdr, shares)
 	if err != nil {
 		return packetAck, err
 	}
+	log.Info("azh|OnRecvRetireSharePacket", "undelegate", shares, "endTIme", endTime)
 	packetAck.Step = 1
-	log.Info("azh|OnRecvRetireSharePacket undelegate", "coin", sdk.NewCoin(data.Amount.Denom, data.Amount.Amount))
-	err = k.BurnTokens(ctx, accAddr, sdk.NewCoin(data.Amount.Denom, data.Amount.Amount))
-	if err == nil {
-		packetAck.Step = 2
-	}
-	return packetAck, err
+	k.stakingKeeper.SetShareDelegation(ctx, accAddr)
+	return packetAck, nil
 }
 
 // OnAcknowledgementRetireSharePacket responds to the the success or failure of a packet
@@ -98,9 +88,6 @@ func (k Keeper) OnAcknowledgementRetireSharePacket(ctx sdk.Context, packet chann
 		log.Info("azh|OnAcknowledgementRetireSharePacket", "dispatchedAck", packetAck.Step)
 		if packetAck.Step == 1 {
 			log.Info("azh|OnAcknowledgementRetireSharePacket unbound")
-		}
-		if packetAck.Step == 2 {
-			log.Info("azh|OnAcknowledgementRetireSharePacket burnTokens")
 		}
 		return nil
 	default:

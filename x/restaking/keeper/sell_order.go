@@ -63,6 +63,7 @@ func (k Keeper) OnRecvSellOrderPacket(ctx sdk.Context, packet channeltypes.Packe
 		// If it was not from this chain we use voucher as denom
 		finalAmountDenom = VoucherDenom(packet.SourcePort, packet.SourceChannel, data.AmountDenom)
 	}
+	bondDemo := k.stakingKeeper.BondDenom(ctx)
 
 	// Dispatch liquidated buy orders
 	for _, liquidation := range liquidated {
@@ -74,6 +75,17 @@ func (k Keeper) OnRecvSellOrderPacket(ctx sdk.Context, packet channeltypes.Packe
 
 		if err := k.SafeMint(ctx, packet.DestinationPort, packet.DestinationChannel, addr, finalAmountDenom, liquidation.Amount); err != nil {
 			return packetAck, err
+		}
+
+		k.Logger(ctx).Info("azh|OnRecvSellOrderPacket", "addr", addr, "from", data.Seller,
+			"finalAmountDenom", finalAmountDenom, "liqAmount", liquidation.Amount, "price", liquidation.Price, "creator", liquidation.Creator)
+		if bondDemo == book.PriceDenom {
+			err := k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, liquidation.Creator, data.Seller, liquidation.Price, liquidation.Amount)
+			if err != nil {
+				return packetAck, err
+			}
+		} else {
+			packetAck.Buyer = liquidation.Creator
 		}
 	}
 
@@ -124,6 +136,7 @@ func (k Keeper) OnAcknowledgementSellOrderPacket(ctx sdk.Context, packet channel
 			// Save the new order book
 			k.SetSellOrderBook(ctx, book)
 		}
+		bondDemo := k.stakingKeeper.BondDenom(ctx)
 
 		// Mint the gains
 		if packetAck.Gain > 0 {
@@ -140,6 +153,13 @@ func (k Keeper) OnAcknowledgementSellOrderPacket(ctx sdk.Context, packet channel
 
 			if err := k.SafeMint(ctx, packet.SourcePort, packet.SourceChannel, receiver, finalPriceDenom, packetAck.Gain); err != nil {
 				return err
+			}
+
+			if bondDemo == book.PriceDenom {
+				err := k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Seller, packetAck.Buyer, data.Price, packetAck.Gain)
+				if err != nil {
+					return err
+				}
 			}
 		}
 

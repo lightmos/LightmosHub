@@ -14,4 +14,28 @@ message Order {
   string creator = 2;
   int32 amount = 3;
   int32 price = 4;
+  bool agree = 5;
+}
+
+message OrderDoneHistory {
+  string fromChainId = 1;
+  string toChainId = 2;
+  repeated DoneChanHistory chainHistory=3;
+}
+
+message DoneChanHistory {
+  string srcDemo = 1;
+  string dstDemo = 2;
+  repeated OrderDemoList orderDemo = 3;
+}
+
+message OrderDemoList {
+  string buyer = 1;
+  string seller =2;
+  repeated OrderDoneList orderDoneList =3;
+}
+
+message OrderDoneList {
+  int32 price = 1;
+  int32 amount = 2;
 }

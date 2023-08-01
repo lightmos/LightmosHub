@@ -533,6 +533,7 @@ func New(
 		scopedRestakingKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
+		app.AccountKeeper,
 	)
 	restakingModule := restakingmodule.NewAppModule(appCodec, app.RestakingKeeper, app.AccountKeeper, app.BankKeeper)
 

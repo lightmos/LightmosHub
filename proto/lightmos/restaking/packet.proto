@@ -4,23 +4,22 @@ package lightmos.restaking;
 
 import "cosmos_proto/cosmos.proto";
 import "lightmos/restaking/restaking.proto";
-
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "lightmos/base/coin.proto";
 
-
 option go_package = "lightmos/x/restaking/types";
 
 message RestakingPacketData {
   oneof packet {
-    NoData               noData            = 1;
-    CreatePairPacketData createPairPacket  = 2;
-    SellOrderPacketData  sellOrderPacket   = 3;
-    BuyOrderPacketData   buyOrderPacket     = 4;
+    NoData                noData            = 1;
+    CreatePairPacketData  createPairPacket  = 2;
+    SellOrderPacketData   sellOrderPacket   = 3;
+    BuyOrderPacketData    buyOrderPacket    = 4;
     RetireSharePacketData retireSharePacket = 5;
-    RestakePacketData    restakePacket      = 6;
+    RestakePacketData     restakePacket     = 6;
+    UndelegatePacketData  undelegatePacket  = 7;
   }
 }
 
@@ -48,6 +47,7 @@ message SellOrderPacketData {
 message SellOrderPacketAck {
   int32 remainingAmount = 1;
   int32 gain            = 2;
+  string buyer          = 3;
 }
 
 // BuyOrderPacketData defines a struct for the packet payload
@@ -63,37 +63,45 @@ message BuyOrderPacketData {
 message BuyOrderPacketAck {
   int32 remainingAmount = 1;
   int32 purchase        = 2;
+  string seller         = 3;
+  int32  price          = 4;
 }
 
-message RestakePacketData{
-  lightmos.restaking.Description     description         = 1 [(gogoproto.nullable) = false];
-  lightmos.restaking.CommissionRates commission          = 2 [(gogoproto.nullable) = false];
-  string          min_self_delegation = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false
-  ];
-  string                   delegator_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   validator_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string                   pubkey            = 6 ;
-  lightmos.base.Coin value              = 7 [(gogoproto.nullable) = false];
-  string  restaker = 8 ;
-  string  destinationChainId = 9;
-}
-message RestakePacketDataAck{
-  bool succeed = 1 ;
+message RestakePacketData {
+  lightmos.restaking.Description     description         = 1 [(gogoproto.nullable)  = false                 ] ;
+  lightmos.restaking.CommissionRates commission          = 2 [(gogoproto.nullable)  = false                 ] ;
+  string                             min_self_delegation = 3 [(cosmos_proto.scalar) = "cosmos.Int"          , (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int", (gogoproto.nullable) = false];
+  string                             delegator_address   = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"] ;
+  string                             validator_address   = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"] ;
+  string                             pubkey              = 6;
+  lightmos.base.Coin                 value               = 7 [(gogoproto.nullable)  = false                 ] ;
+  string                             restaker            = 8;
+  string                             destinationChainId  = 9;
 }
 
-
+message RestakePacketDataAck {
+  bool succeed = 1;
+}
 
 // RetireSharePacketData defines a struct for the packet payload
 message RetireSharePacketData {
-  string validatorAddress = 1;
-  lightmos.base.Coin amount = 2;
+  string             validatorAddress = 1;
+  lightmos.base.Coin amount           = 2;
 }
 
 // RetireSharePacketAck defines a struct for the packet acknowledgment
 message RetireSharePacketAck {
-  string  validatorAddress = 1;
-  int32 step = 2;
+  int32  step   = 1;
 }
+
+// UndelegatePacketData defines a struct for the packet payload
+message UndelegatePacketData {
+  string validatorAddress    = 1;
+  lightmos.base.Coin amount  = 2;
+}
+
+// UndelegatePacketAck defines a struct for the packet acknowledgment
+message UndelegatePacketAck {
+  int32 step = 1;
+}
+
