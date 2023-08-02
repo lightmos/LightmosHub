@@ -94,8 +94,6 @@ func (k Keeper) OnRecvBuyOrderPacket(ctx sdk.Context, packet channeltypes.Packet
 				packetAck.Seller = liquidation.Creator
 			}
 		}
-		//packetAck.Seller = addr.String()
-		//packetAck.Price = liquidation.Price
 	}
 
 	// Save the new order book
@@ -158,8 +156,6 @@ func (k Keeper) OnAcknowledgementBuyOrderPacket(ctx sdk.Context, packet channelt
 			k.SetBuyOrderBook(ctx, book)
 		}
 
-		bondDemo := k.stakingKeeper.BondDenom(ctx)
-
 		// Mint the purchase
 		if packetAck.Purchase > 0 {
 			receiver, err := sdk.AccAddressFromBech32(data.Buyer)
@@ -181,14 +177,6 @@ func (k Keeper) OnAcknowledgementBuyOrderPacket(ctx sdk.Context, packet channelt
 				packetAck.Purchase,
 			); err != nil {
 				return err
-			}
-			k.Logger(ctx).Info("azh|OnAcknowledgementBuyOrderPacket", "receiver", packetAck.Seller,
-				"finalAmountDenom", finalAmountDenom, "purchase", packetAck.Purchase, "price", packetAck.Price)
-			if bondDemo == book.PriceDenom {
-				err := k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Buyer, packetAck.Seller, data.Price, packetAck.Purchase)
-				if err != nil {
-					return err
-				}
 			}
 		}
 

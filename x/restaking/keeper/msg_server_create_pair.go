@@ -7,7 +7,6 @@ import (
 	"lightmos/x/restaking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 )
 
 func (k msgServer) SendCreatePair(goCtx context.Context, msg *types.MsgSendCreatePair) (*types.MsgSendCreatePairResponse, error) {
@@ -15,31 +14,25 @@ func (k msgServer) SendCreatePair(goCtx context.Context, msg *types.MsgSendCreat
 
 	// Get an order book index
 	pairIndex := types.OrderBookIndex(msg.Port, msg.ChannelID, msg.SourceDenom, msg.TargetDenom)
-
-	// If an order book is found, return an error
-	_, found := k.GetSellOrderBook(ctx, pairIndex)
-	if found {
-		return &types.MsgSendCreatePairResponse{}, errors.New("the pair already exist")
+	demo := k.stakingKeeper.BondDenom(ctx)
+	if demo == msg.TargetDenom {
+		// If an order book is found, return an error
+		_, found := k.GetSellOrderBook(ctx, pairIndex)
+		if found {
+			return &types.MsgSendCreatePairResponse{}, errors.New("the pair already exist")
+		}
+		book := types.NewSellOrderBook(msg.SourceDenom, msg.TargetDenom)
+		book.Index = pairIndex
+		k.SetSellOrderBook(ctx, book)
+	} else {
+		// If an order book is found, return an error
+		_, found := k.GetBuyOrderBook(ctx, pairIndex)
+		if found {
+			return &types.MsgSendCreatePairResponse{}, errors.New("the pair already exist")
+		}
+		book := types.NewBuyOrderBook(msg.SourceDenom, msg.TargetDenom)
+		book.Index = pairIndex
+		k.SetBuyOrderBook(ctx, book)
 	}
-
-	// Construct the packet
-	var packet types.CreatePairPacketData
-
-	packet.SourceDenom = msg.SourceDenom
-	packet.TargetDenom = msg.TargetDenom
-
-	// Transmit the packet
-	_, err := k.TransmitCreatePairPacket(
-		ctx,
-		packet,
-		msg.Port,
-		msg.ChannelID,
-		clienttypes.ZeroHeight(),
-		msg.TimeoutTimestamp,
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	return &types.MsgSendCreatePairResponse{}, nil
 }
