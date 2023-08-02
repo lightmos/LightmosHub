@@ -7,7 +7,6 @@ import (
 	"lightmos/x/restaking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 )
 
 func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOrder) (*types.MsgSendSellOrderResponse, error) {
@@ -15,9 +14,15 @@ func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOr
 
 	// If an order book doesn't exist, throw an error
 	pairIndex := types.OrderBookIndex(msg.Port, msg.ChannelID, msg.AmountDenom, msg.PriceDenom)
-	_, found := k.GetSellOrderBook(ctx, pairIndex)
+	sellOrderBook, found := k.GetSellOrderBook(ctx, pairIndex)
 	if !found {
 		return &types.MsgSendSellOrderResponse{}, errors.New("the pair doesn't exist")
+	}
+
+	// The denom sending the sales order must be consistent with the amountDenom in the pair
+	if sellOrderBook.AmountDenom != msg.AmountDenom ||
+		sellOrderBook.AmountDenom != k.stakingKeeper.BondDenom(ctx) {
+		return &types.MsgSendSellOrderResponse{}, errors.New("invalid amount denom")
 	}
 
 	// Get sender's address
@@ -34,17 +39,15 @@ func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOr
 	// Save the voucher received on the other chain, to have the ability to resolve it into the original denom
 	k.SaveVoucherDenom(ctx, msg.Port, msg.ChannelID, msg.AmountDenom)
 
-	var packet types.SellOrderPacketData
-	packet.Seller = msg.Creator
-	packet.AmountDenom = msg.AmountDenom
-	packet.Amount = msg.Amount
-	packet.PriceDenom = msg.PriceDenom
-	packet.Price = msg.Price
+	// Append the remaining amount of the order
+	if msg.Amount > 0 {
+		_, err := sellOrderBook.AppendOrder(msg.Creator, msg.Amount, msg.Price)
+		if err != nil {
+			return &types.MsgSendSellOrderResponse{}, err
+		}
 
-	// Transmit the packet
-	_, err = k.TransmitSellOrderPacket(ctx, packet, msg.Port, msg.ChannelID, clienttypes.ZeroHeight(), msg.TimeoutTimestamp)
-	if err != nil {
-		return nil, err
+		// Save the new order book
+		k.SetSellOrderBook(ctx, sellOrderBook)
 	}
 
 	return &types.MsgSendSellOrderResponse{}, nil
