@@ -167,6 +167,6 @@ require (
 
 replace (
 	github.com/cometbft/cometbft => github.com/lightmos/lightmosbft v0.0.0-20230628063204-0dd3c5a21434
-	github.com/cosmos/cosmos-sdk => github.com/lightmos/lightmos-sdk v0.0.0-20230707013238-3c303347eead
+	github.com/cosmos/cosmos-sdk => github.com/lightmos/lightmos-sdk v0.0.0-20230802095001-2898124ac628
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
