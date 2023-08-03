@@ -20,6 +20,11 @@ func (k msgServer) SendBuyOrder(goCtx context.Context, msg *types.MsgSendBuyOrde
 		return &types.MsgSendBuyOrderResponse{}, errors.New("the pair doesn't exist")
 	}
 
+	_, found1 := k.GetSellOrderBook(ctx, pairIndex)
+	if found1 {
+		return &types.MsgSendBuyOrderResponse{}, errors.New("seller can`t push buy order")
+	}
+
 	// Lock the token to send
 	sender, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
