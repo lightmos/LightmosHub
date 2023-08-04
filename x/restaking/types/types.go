@@ -69,6 +69,39 @@ func (book *OrderBook) appendOrder(creator string, amount int32, price int32, or
 	return order.Id, nil
 }
 
+func (book *OrderBook) updateOrAppendOrder(creator string, amount int32, price int32) (int32, error) {
+	if err := checkAmountAndPrice(amount, price); err != nil {
+		return 0, err
+	}
+
+	// Initialize the order
+	var order *Order
+	order.Id = book.GetNextOrderID()
+	order.Creator = creator
+	order.Amount = amount
+	order.Price = price
+
+	foundCreator := func(order *Order) bool {
+		for _, v := range book.Orders {
+			if v.Creator == creator {
+				return true
+			}
+			continue
+		}
+		return false
+	}
+
+	if len(book.Orders) > 0 && foundCreator(order) {
+		book.Orders[0] = order
+	} else {
+		book.Orders = append(book.Orders, order)
+		// Increment ID tracker
+		book.IncrementNextOrderID()
+	}
+
+	return order.Id, nil
+}
+
 func checkAmountAndPrice(amount int32, price int32) error {
 	if amount == int32(0) {
 		return ErrZeroAmount
@@ -205,6 +238,10 @@ func (b *BuyOrderBook) LiquidateFromSellOrder(order Order) (
 
 func (s *SellOrderBook) AppendOrder(creator string, amount int32, price int32) (int32, error) {
 	return s.Book.appendOrder(creator, amount, price, Decreasing)
+}
+
+func (s *SellOrderBook) UpdateOrInsertOrder(creator string, amount int32, price int32) (int32, error) {
+	return s.Book.updateOrAppendOrder(creator, amount, price)
 }
 
 func (s *SellOrderBook) FillBuyOrder(order Order) (liquidated Order, match bool) {
