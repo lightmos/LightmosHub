@@ -12,11 +12,13 @@ import (
 func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOrder) (*types.MsgSendSellOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// If an order book doesn't exist, throw an error
+	// If an order book doesn't exist, create
 	pairIndex := types.OrderBookIndex(msg.Port, msg.ChannelID, msg.AmountDenom, msg.PriceDenom)
 	sellOrderBook, found := k.GetSellOrderBook(ctx, pairIndex)
 	if !found {
-		return &types.MsgSendSellOrderResponse{}, errors.New("the pair doesn't exist")
+		book := types.NewSellOrderBook(msg.AmountDenom, msg.PriceDenom)
+		book.Index = pairIndex
+		k.SetSellOrderBook(ctx, book)
 	}
 
 	// The denom sending the sales order must be consistent with the amountDenom in the pair
@@ -40,7 +42,7 @@ func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOr
 
 	// Append the remaining amount of the order
 	if msg.Amount > 0 {
-		_, err := sellOrderBook.AppendOrder(msg.Creator, msg.Amount, msg.Price)
+		_, err := sellOrderBook.UpdateOrInsertOrder(msg.Creator, msg.Amount, msg.Price)
 		if err != nil {
 			return &types.MsgSendSellOrderResponse{}, err
 		}
