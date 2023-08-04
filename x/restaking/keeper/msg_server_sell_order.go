@@ -20,8 +20,7 @@ func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOr
 	}
 
 	// The denom sending the sales order must be consistent with the amountDenom in the pair
-	if sellOrderBook.AmountDenom != msg.AmountDenom ||
-		sellOrderBook.AmountDenom != k.stakingKeeper.BondDenom(ctx) {
+	if sellOrderBook.AmountDenom != msg.AmountDenom {
 		return &types.MsgSendSellOrderResponse{}, errors.New("invalid amount denom")
 	}
 
