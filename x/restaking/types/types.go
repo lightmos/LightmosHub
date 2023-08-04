@@ -207,39 +207,29 @@ func (s *SellOrderBook) AppendOrder(creator string, amount int32, price int32) (
 	return s.Book.appendOrder(creator, amount, price, Decreasing)
 }
 
-func (s *SellOrderBook) FillBuyOrder(order Order) (
-	remainingBuyOrder Order,
-	liquidated []Order,
-	purchase int32,
-	filled bool,
-) {
-	var liquidatedList []Order
-	totalPurchase := int32(0)
-	remainingBuyOrder = order
-
+func (s *SellOrderBook) FillBuyOrder(order Order) (liquidated Order, match bool) {
 	// Liquidate as long as there is match
-	for {
-		var match bool
-		var liquidation Order
-		remainingBuyOrder, liquidation, purchase, match, filled = s.LiquidateFromBuyOrder(
-			remainingBuyOrder,
-		)
-		if !match {
-			break
-		}
-
-		// Update gains
-		totalPurchase += purchase
-
-		// Update liquidated
-		liquidatedList = append(liquidatedList, liquidation)
-
-		if filled {
-			break
+	orderCount := len(s.Book.Orders)
+	if orderCount == 0 {
+		return
+	}
+	for i := 0; i < orderCount; i++ {
+		currentAsk := s.Book.Orders[i]
+		if order.Price == currentAsk.Price {
+			if currentAsk.Amount >= order.Amount {
+				currentAsk.Amount -= order.Amount
+				liquidated.Creator = currentAsk.Creator
+				liquidated.Creator = currentAsk.Creator
+				if currentAsk.Amount == 0 {
+					s.Book.Orders = append(s.Book.Orders[:i], s.Book.Orders[i+1:]...)
+				} else {
+					s.Book.Orders[i] = currentAsk
+				}
+				break
+			}
 		}
 	}
-
-	return remainingBuyOrder, liquidatedList, totalPurchase, filled
+	return
 }
 
 func (s *SellOrderBook) LiquidateFromBuyOrder(order Order) (
