@@ -301,12 +301,12 @@ func (im IBCModule) OnAcknowledgementPacket(
 
 	// Dispatch packet
 	switch packet := modulePacketData.Packet.(type) {
-	case *types.RestakingPacketData_CreatePairPacket:
-		err := im.keeper.OnAcknowledgementCreatePairPacket(ctx, modulePacket, *packet.CreatePairPacket, ack)
-		if err != nil {
-			return err
-		}
-		eventType = types.EventTypeCreatePairPacket
+	//case *types.RestakingPacketData_CreatePairPacket:
+	//	err := im.keeper.OnAcknowledgementCreatePairPacket(ctx, modulePacket, *packet.CreatePairPacket, ack)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	eventType = types.EventTypeCreatePairPacket
 	// case *types.RestakingPacketData_SellOrderPacket:
 	// 	err := im.keeper.OnAcknowledgementSellOrderPacket(ctx, modulePacket, *packet.SellOrderPacket, ack)
 	// 	if err != nil {

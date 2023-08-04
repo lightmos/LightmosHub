@@ -54,6 +54,10 @@ func (k Keeper) OnRecvBuyOrderPacket(ctx sdk.Context, packet channeltypes.Packet
 		Price:  data.Price,
 	})
 
+	if purchase < data.Amount {
+		return types.BuyOrderPacketAck{}, errors.New("buy amount is more then sell amount")
+	}
+
 	// Return remaining amount and gains
 	packetAck.RemainingAmount = remaining.Amount
 	packetAck.Purchase = purchase
@@ -65,7 +69,6 @@ func (k Keeper) OnRecvBuyOrderPacket(ctx sdk.Context, packet channeltypes.Packet
 		// If it was not from this chain we use voucher as denom
 		finalPriceDenom = VoucherDenom(packet.SourcePort, packet.SourceChannel, data.PriceDenom)
 	}
-	bondDemo := k.stakingKeeper.BondDenom(ctx)
 
 	// Dispatch liquidated buy order
 	for _, liquidation := range liquidated {
@@ -85,15 +88,8 @@ func (k Keeper) OnRecvBuyOrderPacket(ctx sdk.Context, packet channeltypes.Packet
 		); err != nil {
 			return packetAck, err
 		}
-
-		if bondDemo == book.PriceDenom {
-			err := k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Buyer, liquidation.Creator, liquidation.Price, liquidation.Amount)
-			if err != nil {
-				return packetAck, err
-			} else {
-				packetAck.Seller = liquidation.Creator
-			}
-		}
+		packetAck.Seller = liquidation.Creator
+		packetAck.Price = liquidation.Price
 	}
 
 	// Save the new order book
@@ -135,26 +131,26 @@ func (k Keeper) OnAcknowledgementBuyOrderPacket(ctx sdk.Context, packet channelt
 		}
 
 		// Get the sell order book
-		pairIndex := types.OrderBookIndex(packet.SourcePort, packet.SourceChannel, data.AmountDenom, data.PriceDenom)
-		book, found := k.GetBuyOrderBook(ctx, pairIndex)
-		if !found {
-			panic("buy order book must exist")
-		}
-
-		// Append the remaining amount of the order
-		if packetAck.RemainingAmount > 0 {
-			_, err := book.AppendOrder(
-				data.Buyer,
-				packetAck.RemainingAmount,
-				data.Price,
-			)
-			if err != nil {
-				return err
-			}
-
-			// Save the new order book
-			k.SetBuyOrderBook(ctx, book)
-		}
+		//pairIndex := types.OrderBookIndex(packet.SourcePort, packet.SourceChannel, data.AmountDenom, data.PriceDenom)
+		//book, found := k.GetBuyOrderBook(ctx, pairIndex)
+		//if !found {
+		//	panic("buy order book must exist")
+		//}
+		//
+		//// Append the remaining amount of the order
+		//if packetAck.RemainingAmount > 0 {
+		//	_, err := book.AppendOrder(
+		//		data.Buyer,
+		//		packetAck.RemainingAmount,
+		//		data.Price,
+		//	)
+		//	if err != nil {
+		//		return err
+		//	}
+		//
+		//	// Save the new order book
+		//	k.SetBuyOrderBook(ctx, book)
+		//}
 
 		// Mint the purchase
 		if packetAck.Purchase > 0 {
@@ -176,6 +172,10 @@ func (k Keeper) OnAcknowledgementBuyOrderPacket(ctx sdk.Context, packet channelt
 				finalAmountDenom,
 				packetAck.Purchase,
 			); err != nil {
+				return err
+			}
+			err = k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Buyer, packetAck.Seller, packetAck.Price, packetAck.Purchase)
+			if err != nil {
 				return err
 			}
 		}

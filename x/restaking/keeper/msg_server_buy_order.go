@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-
 	"lightmos/x/restaking/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,15 +13,14 @@ func (k msgServer) SendBuyOrder(goCtx context.Context, msg *types.MsgSendBuyOrde
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Cannot send a order if the pair doesn't exist
-	pairIndex := types.OrderBookIndex(msg.Port, msg.ChannelID, msg.AmountDenom, msg.PriceDenom)
-	_, found := k.GetBuyOrderBook(ctx, pairIndex)
-	if !found {
-		return &types.MsgSendBuyOrderResponse{}, errors.New("the pair doesn't exist")
-	}
-
-	_, found1 := k.GetSellOrderBook(ctx, pairIndex)
-	if found1 {
-		return &types.MsgSendBuyOrderResponse{}, errors.New("seller can`t push buy order")
+	//pairIndex := types.OrderBookIndex(msg.Port, msg.ChannelID, msg.AmountDenom, msg.PriceDenom)
+	//_, found := k.GetBuyOrderBook(ctx, pairIndex)
+	//if !found {
+	//	return &types.MsgSendBuyOrderResponse{}, errors.New("the pair doesn't exist")
+	//}
+	demo := k.stakingKeeper.BondDenom(ctx)
+	if demo != msg.PriceDenom {
+		return &types.MsgSendBuyOrderResponse{}, errors.New("invalid price demo")
 	}
 
 	// Lock the token to send

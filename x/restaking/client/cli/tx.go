@@ -30,7 +30,7 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdSendCreatePair())
+	//cmd.AddCommand(CmdSendCreatePair())
 	cmd.AddCommand(CmdSendSellOrder())
 	cmd.AddCommand(CmdSendBuyOrder())
 	cmd.AddCommand(CmdCancelSellOrder())
