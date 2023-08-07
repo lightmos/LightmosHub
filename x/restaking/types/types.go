@@ -75,7 +75,7 @@ func (book *OrderBook) updateOrAppendOrder(creator string, amount int32, price i
 	}
 
 	// Initialize the order
-	var order *Order
+	var order Order
 	order.Id = book.GetNextOrderID()
 	order.Creator = creator
 	order.Amount = amount
@@ -91,10 +91,10 @@ func (book *OrderBook) updateOrAppendOrder(creator string, amount int32, price i
 		return false
 	}
 
-	if len(book.Orders) > 0 && foundCreator(order) {
-		book.Orders[0] = order
+	if len(book.Orders) > 0 && foundCreator(&order) {
+		book.Orders[0] = &order
 	} else {
-		book.Orders = append(book.Orders, order)
+		book.Orders = append(book.Orders, &order)
 		// Increment ID tracker
 		book.IncrementNextOrderID()
 	}
