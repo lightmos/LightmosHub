@@ -21,7 +21,6 @@ service Msg {
   rpc CreateValidator (MsgCreateValidator) returns (MsgCreateValidatorResponse);
   rpc SendRetireShare (MsgSendRetireShare) returns (MsgSendRetireShareResponse);
   rpc SendUndelegate  (MsgSendUndelegate ) returns (MsgSendUndelegateResponse );
-  rpc ChangePairState (MsgChangePairState) returns (MsgChangePairStateResponse);
 }
 message MsgSendCreatePair {
   string sourceDenom      = 5;
@@ -126,18 +125,3 @@ message MsgSendUndelegate {
 }
 
 message MsgSendUndelegateResponse {}
-
-message MsgChangePairState {
-  string creator     = 1;
-  string port        = 2;
-  string channelID   = 3;
-  string sourceDenom = 4;
-  string targetDenom = 5;
-  int32  price       = 6;
-  string author      = 7;
-  uint64  timeoutTimestamp =8;
-}
-
-message MsgChangePairStateResponse {
-  string status = 1;
-}

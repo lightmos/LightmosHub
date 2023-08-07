@@ -16,9 +16,9 @@ func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOr
 	pairIndex := types.OrderBookIndex(msg.Port, msg.ChannelID, msg.AmountDenom, msg.PriceDenom)
 	sellOrderBook, found := k.GetSellOrderBook(ctx, pairIndex)
 	if !found {
-		book := types.NewSellOrderBook(msg.AmountDenom, msg.PriceDenom)
-		book.Index = pairIndex
-		k.SetSellOrderBook(ctx, book)
+		sellOrderBook = types.NewSellOrderBook(msg.AmountDenom, msg.PriceDenom)
+		sellOrderBook.Index = pairIndex
+		k.SetSellOrderBook(ctx, sellOrderBook)
 	}
 
 	// The denom sending the sales order must be consistent with the amountDenom in the pair
