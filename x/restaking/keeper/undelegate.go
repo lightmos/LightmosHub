@@ -44,20 +44,16 @@ func (k Keeper) OnRecvUndelegatePacket(ctx sdk.Context, packet channeltypes.Pack
 	if recipientAcc == nil {
 		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", restakingtypes.ModuleName)
 	}
-	//destDenomFromVocher, flg := k.OriginalDenom(ctx, packet.DestinationPort, packet.DestinationChannel, data.Amount.Denom)
-	//if !flg {
-	//	return packetAck, errors.New("invalid denom")
-	//}
 	demo := k.stakingKeeper.BondDenom(ctx)
 	amount := k.bankKeeper.GetBalance(ctx, recipientAcc.GetAddress(), demo)
 	if err != nil {
 		return packetAck, err
 	}
 	del, retire := k.DescHistory(ctx, "token", demo, data.ValidatorAddress, int32(data.Amount.Amount.Int64()))
-	if !del || retire > int32(amount.Amount.Int64()) {
+	if !del || int64(retire) > amount.Amount.Int64() {
 		return packetAck, errors.New("not exist buy sell")
 	}
-	coins := sdk.NewCoin(demo, data.Amount.Amount)
+	coins := sdk.NewCoin(demo, sdk.NewInt(int64(retire)))
 	if err = k.BurnTokens(ctx, recipientAcc.GetAddress(), coins); err != nil {
 		return packetAck, err
 	}

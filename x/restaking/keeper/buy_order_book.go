@@ -142,39 +142,38 @@ func (k Keeper) UpdateDoneHistory(ctx sdk.Context, srcDemo, destDemo, buyer, sel
 
 func (k Keeper) DescHistory(ctx sdk.Context, srcDemo, destDemo, creator string, amount int32) (found bool, retire int32) {
 	history, ok := k.GetDemoHistory(ctx, srcDemo, destDemo)
+	var remaining = amount
 	if ok {
-		var orderFlag bool
+		var listFlag bool
 	loop:
 		for _, doneList := range history.OrderDemo {
-			if doneList.Buyer == creator {
-				for _, doneOrder := range doneList.OrderDoneList {
-					if doneOrder.Amount >= amount {
-						doneOrder.Amount -= amount
-						retire += amount * doneOrder.Price
-						orderFlag = true
+			if doneList.Seller == creator {
+				listFlag = true
+				for i := 0; i < len(doneList.OrderDoneList); i++ {
+					currentOrder := doneList.OrderDoneList[i]
+					if currentOrder.Amount >= amount {
+						currentOrder.Amount -= amount
+						if currentOrder.Amount == amount {
+							doneList.OrderDoneList = append(doneList.OrderDoneList[:i], doneList.OrderDoneList[i+1:]...)
+						} else {
+							doneList.OrderDoneList[i] = currentOrder
+						}
+						remaining = 0
+						retire += amount * currentOrder.Price
 						break loop
+					} else {
+						doneList.OrderDoneList = append(doneList.OrderDoneList[:i], doneList.OrderDoneList[i+1:]...)
+						remaining -= currentOrder.Amount
+						retire += currentOrder.Amount * currentOrder.Price
 					}
 				}
 			}
 		}
 
-		if !orderFlag {
-		loops:
-			for _, doneList := range history.OrderDemo {
-				if doneList.Seller == creator {
-					for _, doneOrder := range doneList.OrderDoneList {
-						if doneOrder.Amount >= amount {
-							doneOrder.Amount -= amount
-							retire += amount * doneOrder.Price
-							orderFlag = true
-							break loops
-						}
-					}
-				}
-			}
+		if listFlag {
+			k.storeHistory(ctx, history)
+			return true, retire
 		}
-		k.storeHistory(ctx, history)
-		return true, retire
 	}
-	return
+	return false, 0
 }

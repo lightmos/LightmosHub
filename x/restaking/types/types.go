@@ -256,7 +256,8 @@ func (s *SellOrderBook) FillBuyOrder(order Order) (liquidated Order, match bool)
 			if currentAsk.Amount >= order.Amount {
 				currentAsk.Amount -= order.Amount
 				liquidated.Creator = currentAsk.Creator
-				liquidated.Creator = currentAsk.Creator
+				liquidated.Amount = order.Amount
+				liquidated.Price = order.Price
 				if currentAsk.Amount == 0 {
 					s.Book.Orders = append(s.Book.Orders[:i], s.Book.Orders[i+1:]...)
 				} else {
