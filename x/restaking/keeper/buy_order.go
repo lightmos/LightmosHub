@@ -123,31 +123,29 @@ func (k Keeper) OnAcknowledgementBuyOrderPacket(ctx sdk.Context, packet channelt
 		}
 
 		// Mint the purchase
-		if packetAck.Purchase > 0 {
-			receiver, err := sdk.AccAddressFromBech32(data.Buyer)
-			if err != nil {
-				return err
-			}
-			finalAmountDenom, saved := k.OriginalDenom(ctx, packet.SourcePort, packet.SourceChannel, data.AmountDenom)
-			if !saved {
-				// If it was not from this chain we use voucher as denom
-				finalAmountDenom = VoucherDenom(packet.DestinationPort, packet.DestinationChannel, data.AmountDenom)
-			}
+		receiver, err := sdk.AccAddressFromBech32(data.Buyer)
+		if err != nil {
+			return err
+		}
+		finalAmountDenom, saved := k.OriginalDenom(ctx, packet.SourcePort, packet.SourceChannel, data.AmountDenom)
+		if !saved {
+			// If it was not from this chain we use voucher as denom
+			finalAmountDenom = VoucherDenom(packet.DestinationPort, packet.DestinationChannel, data.AmountDenom)
+		}
 
-			if err := k.SafeMint(
-				ctx,
-				packet.SourcePort,
-				packet.SourceChannel,
-				receiver,
-				finalAmountDenom,
-				data.Amount,
-			); err != nil {
-				return err
-			}
-			err = k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Buyer, packetAck.Seller, data.Price, data.Amount)
-			if err != nil {
-				return err
-			}
+		if err := k.SafeMint(
+			ctx,
+			packet.SourcePort,
+			packet.SourceChannel,
+			receiver,
+			finalAmountDenom,
+			data.Amount,
+		); err != nil {
+			return err
+		}
+		err = k.UpdateDoneHistory(ctx, data.AmountDenom, data.PriceDenom, data.Buyer, packetAck.Seller, data.Price, data.Amount)
+		if err != nil {
+			return err
 		}
 
 		return nil

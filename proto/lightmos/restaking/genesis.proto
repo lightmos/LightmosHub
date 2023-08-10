@@ -7,15 +7,18 @@ import "lightmos/restaking/params.proto";
 import "lightmos/restaking/sell_order_book.proto";
 import "lightmos/restaking/buy_order_book.proto";
 import "lightmos/restaking/denom_trace.proto";
+import "lightmos/restaking/validator_token.proto";
 
 option go_package = "lightmos/x/restaking/types";
 
 // GenesisState defines the restaking module's genesis state.
 message GenesisState {
-           Params        params            = 1 [(gogoproto.nullable) = false];
-           string        port_id           = 2;
-  repeated SellOrderBook sellOrderBookList = 3 [(gogoproto.nullable) = false];
-  repeated BuyOrderBook  buyOrderBookList  = 4 [(gogoproto.nullable) = false];
-  repeated DenomTrace    denomTraceList    = 5 [(gogoproto.nullable) = false];
+           Params         params              = 1 [(gogoproto.nullable) = false];
+           string         port_id             = 2;
+  repeated SellOrderBook  sellOrderBookList   = 3 [(gogoproto.nullable) = false];
+  repeated BuyOrderBook   buyOrderBookList    = 4 [(gogoproto.nullable) = false];
+  repeated DenomTrace     denomTraceList      = 5 [(gogoproto.nullable) = false];
+  repeated ValidatorToken validatorTokenList  = 6 [(gogoproto.nullable) = false];
+           uint64         validatorTokenCount = 7;
 }
 

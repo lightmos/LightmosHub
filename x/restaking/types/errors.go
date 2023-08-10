@@ -21,6 +21,7 @@ var (
 	ErrCommissionChangeRateNegative  = sdkerrors.Register(ModuleName, 13, "commission change rate must be positive")
 	ErrCommissionChangeRateGTMaxRate = sdkerrors.Register(ModuleName, 14, "commission change rate cannot be more than the max rate")
 	ErrCommissionGTMaxChangeRate     = sdkerrors.Register(ModuleName, 15, "commission cannot be changed more than max change rate")
-
-	ErrSelfDelegationBelowMinimum = sdkerrors.Register(ModuleName, 16, "validator's self delegation must be greater than their minimum self delegation")
+	ErrSelfDelegationBelowMinimum    = sdkerrors.Register(ModuleName, 16, "validator's self delegation must be greater than their minimum self delegation")
+	ErrRetireNotFound                = sdkerrors.Register(ModuleName, 17, "retire not found")
+	ErrTokenTooLarge                 = sdkerrors.Register(ModuleName, 18, "token is too large")
 )

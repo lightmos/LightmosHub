@@ -17,9 +17,9 @@ message RestakingPacketData {
     CreatePairPacketData  createPairPacket  = 2;
     SellOrderPacketData   sellOrderPacket   = 3;
     BuyOrderPacketData    buyOrderPacket    = 4;
-    RetireSharePacketData retireSharePacket = 5;
-    RestakePacketData     restakePacket     = 6;
-    UndelegatePacketData  undelegatePacket  = 7;
+    RestakePacketData     restakePacket     = 5;
+    UndelegatePacketData  undelegatePacket  = 6;
+    RetireSharePacketData retireSharePacket = 7;
   }
 }
 
@@ -85,8 +85,8 @@ message RestakePacketDataAck {
 
 // RetireSharePacketData defines a struct for the packet payload
 message RetireSharePacketData {
-  string             validatorAddress = 1;
-  lightmos.base.Coin amount           = 2;
+  string validatorAddress     = 1;
+  lightmos.base.Coin amount   = 2;
 }
 
 // RetireSharePacketAck defines a struct for the packet acknowledgment

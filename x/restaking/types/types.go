@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	MaxAmount = int32(100000)
+	MaxAmount = int32(10000000)
 	MaxPrice  = int32(100000)
 )
 
@@ -76,6 +76,7 @@ func (book *OrderBook) updateOrAppendOrder(creator string, amount int32, price i
 
 	// Initialize the order
 	var order Order
+
 	order.Id = book.GetNextOrderID()
 	order.Creator = creator
 	order.Amount = amount
@@ -202,9 +203,6 @@ func (b *BuyOrderBook) LiquidateFromSellOrder(order Order) (
 
 	// Check if match
 	highestBid := b.Book.Orders[orderCount-1]
-	if highestBid.Agree == false {
-		return order, liquidatedBuyOrder, gain, false, false
-	}
 	if order.Price > highestBid.Price {
 		return order, liquidatedBuyOrder, gain, false, false
 	}
@@ -254,6 +252,7 @@ func (s *SellOrderBook) FillBuyOrder(order Order) (liquidated Order, match bool)
 		currentAsk := s.Book.Orders[i]
 		if order.Price == currentAsk.Price {
 			if currentAsk.Amount >= order.Amount {
+				match = true
 				currentAsk.Amount -= order.Amount
 				liquidated.Creator = currentAsk.Creator
 				liquidated.Amount = order.Amount
@@ -287,9 +286,6 @@ func (s *SellOrderBook) LiquidateFromBuyOrder(order Order) (
 
 	// Check if match
 	lowestAsk := s.Book.Orders[orderCount-1]
-	if lowestAsk.Agree == false {
-		return order, liquidatedSellOrder, purchase, false, false
-	}
 	if order.Price < lowestAsk.Price {
 		return order, liquidatedSellOrder, purchase, false, false
 	}

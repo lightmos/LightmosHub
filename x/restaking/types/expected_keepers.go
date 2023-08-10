@@ -18,7 +18,6 @@ type StakingKeeper interface {
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
 	Undelegate(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec) (time.Time, error)
 	ValidateUnbondAmount(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt math.Int) (shares sdk.Dec, err error)
-	SetShareDelegation(ctx sdk.Context, delAddr sdk.AccAddress)
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

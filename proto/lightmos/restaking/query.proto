@@ -9,6 +9,7 @@ import "lightmos/restaking/params.proto";
 import "lightmos/restaking/sell_order_book.proto";
 import "lightmos/restaking/buy_order_book.proto";
 import "lightmos/restaking/denom_trace.proto";
+import "lightmos/restaking/validator_token.proto";
 
 option go_package = "lightmos/x/restaking/types";
 
@@ -48,6 +49,16 @@ service Query {
   }
   rpc DenomTraceAll (QueryAllDenomTraceRequest) returns (QueryAllDenomTraceResponse) {
     option (google.api.http).get = "/lightmos/restaking/denom_trace";
+  
+  }
+  
+  // Queries a list of ValidatorToken items.
+  rpc ValidatorToken    (QueryGetValidatorTokenRequest) returns (QueryGetValidatorTokenResponse) {
+    option (google.api.http).get = "/lightmos/restaking/validator_token/{address}";
+  
+  }
+  rpc ValidatorTokenAll (QueryAllValidatorTokenRequest) returns (QueryAllValidatorTokenResponse) {
+    option (google.api.http).get = "/lightmos/restaking/validator_token";
   
   }
 }
@@ -110,5 +121,22 @@ message QueryAllDenomTraceRequest {
 message QueryAllDenomTraceResponse {
   repeated DenomTrace                             denomTrace = 1 [(gogoproto.nullable) = false];
            cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetValidatorTokenRequest {
+  string address = 1;
+}
+
+message QueryGetValidatorTokenResponse {
+  ValidatorToken ValidatorToken = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllValidatorTokenRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllValidatorTokenResponse {
+  repeated ValidatorToken                         ValidatorToken = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination     = 2;
 }
 

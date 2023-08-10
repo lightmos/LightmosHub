@@ -14,7 +14,6 @@ message Order {
   string creator = 2;
   int32 amount = 3;
   int32 price = 4;
-  bool agree = 5;
 }
 
 message OrderDoneHistory {

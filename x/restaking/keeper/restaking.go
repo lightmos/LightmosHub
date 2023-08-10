@@ -19,6 +19,7 @@ func (k Keeper) MintTokenForValidator(ctx sdk.Context, height int64) []abci.Vali
 	log := k.Logger(ctx)
 
 	updateVal := make(map[string]sdk.Int)
+	delVal := make(map[string]sdk.Int)
 	currVals, _ := k.stakingKeeper.GetHistoricalInfo(ctx, height)
 	log.Info("azh|restaking BeginBlock", "currVals len", len(currVals.Valset))
 
@@ -27,6 +28,10 @@ func (k Keeper) MintTokenForValidator(ctx sdk.Context, height int64) []abci.Vali
 		var exist bool
 		for _, pre := range preVals.Valset {
 			if val.OperatorAddress == pre.OperatorAddress {
+				if val.Tokens.LT(pre.Tokens) {
+					valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
+					delVal[valAddr.String()] = pre.Tokens.Sub(val.Tokens)
+				}
 				exist = true
 				break
 			}
@@ -36,11 +41,43 @@ func (k Keeper) MintTokenForValidator(ctx sdk.Context, height int64) []abci.Vali
 		}
 	}
 
+	for _, pres := range preVals.Valset {
+		var exist bool
+		for _, vals := range currVals.Valset {
+			if vals.OperatorAddress == pres.OperatorAddress {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			valAddr, _ := sdk.ValAddressFromBech32(pres.OperatorAddress)
+			delVal[valAddr.String()] = pres.Tokens
+		}
+	}
+
 	for val, amount := range updateVal {
-		coins := sdk.NewInt64Coin("token", amount.Int64())
 		valAdr, _ := sdk.ValAddressFromBech32(val)
+		if _, found := k.GetValidatorToken(ctx, val); found {
+			continue
+		}
+		coins := sdk.NewInt64Coin("token", amount.Int64())
 		log.Info("azh|restaking BeginBlock", "accAddr", sdk.AccAddress(valAdr))
 		k.MintTokens(ctx, sdk.AccAddress(valAdr), coins)
+	}
+
+	lens := len(delVal)
+
+	k.Logger(ctx).Info("azh|MintTokenForValidator", "delVal", lens)
+
+	for val, amount := range delVal {
+		valAdr, _ := sdk.ValAddressFromBech32(val)
+		if valToken, found := k.GetValidatorToken(ctx, val); found {
+			amt := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), amount)
+			k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAdr), "restaking", sdk.NewCoins(amt))
+			valToken.Total -= amount.Uint64()
+			valToken.Available = amount.Uint64()
+			k.SetValidatorToken(ctx, valToken)
+		}
 	}
 
 	return []abci.ValidatorUpdate{}
@@ -130,6 +167,12 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 		k.BurnTokens(ctx, restaker, sdk.NewCoin(data.Value.Denom, data.Value.Amount))
 		return packetAck, err
 	}
+
+	vt := types.ValidatorToken{
+		Address: data.Restaker,
+		Total:   data.Value.Amount.Uint64(),
+	}
+	k.SetValidatorToken(ctx, vt)
 	logger.Info("carver|recv restake handle succeed", "restaker", restaker, "denom", data.Value.Denom)
 	packetAck.Succeed = true
 	return packetAck, nil

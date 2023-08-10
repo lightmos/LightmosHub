@@ -40,25 +40,25 @@ func (k Keeper) OnRecvUndelegatePacket(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	// TODO: packet reception logic
-	recipientAcc := k.accountKeeper.GetModuleAccount(ctx, restakingtypes.ModuleName)
-	if recipientAcc == nil {
-		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", restakingtypes.ModuleName)
+	log := k.Logger(ctx)
+	accAddr, _ := sdk.AccAddressFromBech32(data.ValidatorAddress)
+	valAdr := sdk.ValAddress(accAddr)
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
+	if bondDenom != data.Amount.Denom {
+		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", data.Amount.Denom, bondDenom)
 	}
-	demo := k.stakingKeeper.BondDenom(ctx)
-	amount := k.bankKeeper.GetBalance(ctx, recipientAcc.GetAddress(), demo)
+
+	shares, err := k.stakingKeeper.ValidateUnbondAmount(
+		ctx, accAddr, valAdr, data.Amount.Amount,
+	)
 	if err != nil {
 		return packetAck, err
 	}
-	del, retire := k.DescHistory(ctx, "token", demo, data.ValidatorAddress, int32(data.Amount.Amount.Int64()))
-	if !del || int64(retire) > amount.Amount.Int64() {
-		return packetAck, errors.New("not exist buy sell")
-	}
-	coins := sdk.NewCoin(demo, sdk.NewInt(int64(retire)))
-	if err = k.BurnTokens(ctx, recipientAcc.GetAddress(), coins); err != nil {
+	endTime, err := k.stakingKeeper.Undelegate(ctx, accAddr, valAdr, shares)
+	if err != nil {
 		return packetAck, err
 	}
-
-	k.Logger(ctx).Info("azh|OnRecvUndelegatePacket burn success")
+	log.Info("azh|OnRecvRetireSharePacket", "undelegate", shares, "endTIme", endTime)
 	packetAck.Step = 1
 
 	return packetAck, nil
@@ -67,13 +67,12 @@ func (k Keeper) OnRecvUndelegatePacket(ctx sdk.Context, packet channeltypes.Pack
 // OnAcknowledgementUndelegatePacket responds to the the success or failure of a packet
 // acknowledgement written on the receiving chain.
 func (k Keeper) OnAcknowledgementUndelegatePacket(ctx sdk.Context, packet channeltypes.Packet, data restakingtypes.UndelegatePacketData, ack channeltypes.Acknowledgement) error {
+	log := k.Logger(ctx)
 	switch dispatchedAck := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 
 		// TODO: failed acknowledgement logic
-		_ = dispatchedAck.Error
-
-		return nil
+		return errors.New(dispatchedAck.Error)
 	case *channeltypes.Acknowledgement_Result:
 		// Decode the packet acknowledgment
 		var packetAck restakingtypes.UndelegatePacketAck
@@ -84,15 +83,11 @@ func (k Keeper) OnAcknowledgementUndelegatePacket(ctx sdk.Context, packet channe
 		}
 
 		// TODO: successful acknowledgement logic
-		accAddr, err := sdk.AccAddressFromBech32(data.ValidatorAddress)
-		if err != nil {
-			return err
+		log.Info("azh|OnAcknowledgementRetireSharePacket", "dispatchedAck", packetAck.Step)
+		if packetAck.Step == 1 {
+			log.Info("azh|OnAcknowledgementRetireSharePacket unbound")
 		}
-
-		coins := sdk.NewCoin("token", data.Amount.Amount)
-
-		return k.UnlockTokens(ctx, packet.SourcePort, packet.SourceChannel, accAddr, coins)
-
+		return nil
 	default:
 		// The counter-party module doesn't implement the correct acknowledgment format
 		return errors.New("invalid acknowledgment format")

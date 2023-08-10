@@ -9,6 +9,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	restakingtypes "lightmos/x/restaking/types"
 )
 
 // TransmitRetireSharePacket transmits the packet over IBC with the specified source port and source channel
@@ -36,45 +37,53 @@ func (k Keeper) TransmitRetireSharePacket(
 // OnRecvRetireSharePacket processes packet reception
 func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Packet, data types.RetireSharePacketData) (packetAck types.RetireSharePacketAck, err error) {
 	// validate packet data upon receiving
-	log := k.Logger(ctx)
 	if err := data.ValidateBasic(); err != nil {
 		return packetAck, err
 	}
 	// TODO: packet reception logic
-
 	accAddr, _ := sdk.AccAddressFromBech32(data.ValidatorAddress)
-	valAdr := sdk.ValAddress(accAddr)
-	log.Info("azh|OnRecvRetireSharePacket", "accAddr", accAddr)
-	bondDenom := k.stakingKeeper.BondDenom(ctx)
-	if bondDenom != data.Amount.Denom {
-		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", data.Amount.Denom, bondDenom)
+	vt, found := k.GetValidatorToken(ctx, accAddr.String())
+	if !found {
+		return packetAck, errors.New("not found")
 	}
-
-	shares, err := k.stakingKeeper.ValidateUnbondAmount(
-		ctx, accAddr, valAdr, data.Amount.Amount,
-	)
+	recipientAcc := k.accountKeeper.GetModuleAccount(ctx, restakingtypes.ModuleName)
+	if recipientAcc == nil {
+		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", restakingtypes.ModuleName)
+	}
+	demo := k.stakingKeeper.BondDenom(ctx)
+	amount := k.bankKeeper.GetBalance(ctx, recipientAcc.GetAddress(), demo)
 	if err != nil {
 		return packetAck, err
 	}
-	endTime, err := k.stakingKeeper.Undelegate(ctx, accAddr, valAdr, shares)
-	if err != nil {
+	del, retire := k.DescHistory(ctx, "token", demo, data.ValidatorAddress, int32(data.Amount.Amount.Int64()))
+	if !del || int64(retire) > amount.Amount.Int64() || uint64(retire) > vt.Available {
+		return packetAck, errors.New("not exist buy sell")
+	}
+	coins := sdk.NewCoin(demo, sdk.NewInt(int64(retire)))
+	if err = k.BurnTokens(ctx, recipientAcc.GetAddress(), coins); err != nil {
 		return packetAck, err
 	}
-	log.Info("azh|OnRecvRetireSharePacket", "undelegate", shares, "endTIme", endTime)
+	if vt.Total == uint64(retire) {
+		k.RemoveValidatorToken(ctx, accAddr.String())
+	} else {
+		vt.Available -= uint64(retire)
+		k.SetValidatorToken(ctx, vt)
+	}
+	k.Logger(ctx).Info("azh|OnRecvUndelegatePacket burn success")
 	packetAck.Step = 1
-	k.stakingKeeper.SetShareDelegation(ctx, accAddr)
 	return packetAck, nil
 }
 
 // OnAcknowledgementRetireSharePacket responds to the the success or failure of a packet
 // acknowledgement written on the receiving chain.
 func (k Keeper) OnAcknowledgementRetireSharePacket(ctx sdk.Context, packet channeltypes.Packet, data types.RetireSharePacketData, ack channeltypes.Acknowledgement) error {
-	log := k.Logger(ctx)
 	switch dispatchedAck := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Error:
 
 		// TODO: failed acknowledgement logic
-		return errors.New(dispatchedAck.Error)
+		_ = dispatchedAck.Error
+
+		return nil
 	case *channeltypes.Acknowledgement_Result:
 		// Decode the packet acknowledgment
 		var packetAck types.RetireSharePacketAck
@@ -85,11 +94,14 @@ func (k Keeper) OnAcknowledgementRetireSharePacket(ctx sdk.Context, packet chann
 		}
 
 		// TODO: successful acknowledgement logic
-		log.Info("azh|OnAcknowledgementRetireSharePacket", "dispatchedAck", packetAck.Step)
-		if packetAck.Step == 1 {
-			log.Info("azh|OnAcknowledgementRetireSharePacket unbound")
+		accAddr, err := sdk.AccAddressFromBech32(data.ValidatorAddress)
+		if err != nil {
+			return err
 		}
-		return nil
+
+		coins := sdk.NewCoin("token", data.Amount.Amount)
+
+		return k.UnlockTokens(ctx, packet.SourcePort, packet.SourceChannel, accAddr, coins)
 	default:
 		// The counter-party module doesn't implement the correct acknowledgment format
 		return errors.New("invalid acknowledgment format")

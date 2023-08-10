@@ -11,10 +11,11 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		PortId:            PortID,
-		SellOrderBookList: []SellOrderBook{},
-		BuyOrderBookList:  []BuyOrderBook{},
-		DenomTraceList:    []DenomTrace{},
+		PortId:             PortID,
+		SellOrderBookList:  []SellOrderBook{},
+		BuyOrderBookList:   []BuyOrderBook{},
+		DenomTraceList:     []DenomTrace{},
+		ValidatorTokenList: []ValidatorToken{},
 		// this line is used by starport scaffolding # genesis/types/default
 		Params: DefaultParams(),
 	}
@@ -55,6 +56,14 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated index for denomTrace")
 		}
 		denomTraceIndexMap[index] = struct{}{}
+	}
+	// Check for duplicated address in validatorToken
+	validatorTokenIdMap := make(map[string]bool)
+	for _, elem := range gs.ValidatorTokenList {
+		if _, ok := validatorTokenIdMap[elem.Address]; ok {
+			return fmt.Errorf("duplicated id for validatorToken")
+		}
+		validatorTokenIdMap[elem.Address] = true
 	}
 	// this line is used by starport scaffolding # genesis/types/validate
 

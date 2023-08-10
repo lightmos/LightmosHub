@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"lightmos/x/restaking/types"
@@ -67,7 +66,7 @@ func (k Keeper) storeHistory(ctx sdk.Context, orderHistory types.DoneChanHistory
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OrderDoneHistoryPrefix))
 	b := k.cdc.MustMarshal(&orderHistory)
 	store.Set(types.DemoDoneHistory(
-		orderHistory.GetDstDemo()+orderHistory.GetDstDemo(),
+		orderHistory.GetSrcDemo()+orderHistory.GetDstDemo(),
 	), b)
 }
 
@@ -95,12 +94,18 @@ func (k Keeper) GetDemoHistory(
 }
 
 func (k Keeper) UpdateDoneHistory(ctx sdk.Context, srcDemo, destDemo, buyer, seller string, price int32, amount int32) error {
+	orderDoneList := &types.OrderDoneList{
+		Amount: amount,
+		Price:  price,
+	}
+	demoList := types.OrderDemoList{
+		Buyer:  buyer,
+		Seller: seller,
+	}
 	history, ok := k.GetDemoHistory(ctx, srcDemo, destDemo)
 	if ok {
-		var listFlag bool
 		for _, doneList := range history.OrderDemo {
 			if doneList.Buyer == buyer && doneList.Seller == seller {
-				listFlag = true
 				var orderFlag bool
 				for _, doneOrder := range doneList.OrderDoneList {
 					if doneOrder.Price == price {
@@ -110,10 +115,7 @@ func (k Keeper) UpdateDoneHistory(ctx sdk.Context, srcDemo, destDemo, buyer, sel
 					}
 				}
 				if !orderFlag {
-					doneList.OrderDoneList = append(doneList.OrderDoneList, &types.OrderDoneList{
-						Amount: amount,
-						Price:  price,
-					})
+					doneList.OrderDoneList = append(doneList.OrderDoneList, orderDoneList)
 				}
 
 				k.storeHistory(ctx, history)
@@ -121,23 +123,18 @@ func (k Keeper) UpdateDoneHistory(ctx sdk.Context, srcDemo, destDemo, buyer, sel
 			}
 		}
 
-		if !listFlag {
-			demoList := types.OrderDemoList{
-				Buyer:  buyer,
-				Seller: seller,
-			}
-			demoList.OrderDoneList = append(demoList.OrderDoneList, &types.OrderDoneList{
-				Amount: amount,
-				Price:  price,
-			})
-
-			history.OrderDemo = append(history.OrderDemo, &demoList)
-			k.storeHistory(ctx, history)
-			return nil
-		}
-		k.Logger(ctx).Info("azh|UpdateDoneHistory", "history", history)
+		demoList.OrderDoneList = append(demoList.OrderDoneList, orderDoneList)
+		history.OrderDemo = append(history.OrderDemo, &demoList)
+		k.storeHistory(ctx, history)
+		return nil
 	}
-	return errors.New("kv not found")
+
+	history.SrcDemo = srcDemo
+	history.DstDemo = destDemo
+	demoList.OrderDoneList = append(demoList.OrderDoneList, orderDoneList)
+	history.OrderDemo = append(history.OrderDemo, &demoList)
+	k.storeHistory(ctx, history)
+	return nil
 }
 
 func (k Keeper) DescHistory(ctx sdk.Context, srcDemo, destDemo, creator string, amount int32) (found bool, retire int32) {

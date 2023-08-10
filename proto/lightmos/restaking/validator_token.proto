@@ -1,0 +1,11 @@
+syntax = "proto3";
+package lightmos.restaking;
+
+option go_package = "lightmos/x/restaking/types";
+
+message ValidatorToken {
+  string address = 1;
+  uint64 total = 2; 
+  uint64 available = 3; 
+  
+}

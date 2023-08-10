@@ -51,3 +51,8 @@ func RestakeServiceKey(
 
 	return key
 }
+
+const (
+	ValidatorTokenKey      = "ValidatorToken/value/"
+	ValidatorTokenCountKey = "ValidatorToken/count/"
+)

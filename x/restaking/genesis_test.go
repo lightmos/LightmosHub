@@ -54,5 +54,7 @@ func TestGenesis(t *testing.T) {
 	require.ElementsMatch(t, genesisState.SellOrderBookList, got.SellOrderBookList)
 	require.ElementsMatch(t, genesisState.BuyOrderBookList, got.BuyOrderBookList)
 	require.ElementsMatch(t, genesisState.DenomTraceList, got.DenomTraceList)
+	require.ElementsMatch(t, genesisState.ValidatorTokenList, got.ValidatorTokenList)
+	require.Equal(t, genesisState.ValidatorTokenCount, got.ValidatorTokenCount)
 	// this line is used by starport scaffolding # genesis/test/assert
 }
