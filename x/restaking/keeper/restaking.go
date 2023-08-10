@@ -16,12 +16,9 @@ import (
 )
 
 func (k Keeper) MintTokenForValidator(ctx sdk.Context, height int64) []abci.ValidatorUpdate {
-	log := k.Logger(ctx)
-
 	updateVal := make(map[string]sdk.Int)
 	delVal := make(map[string]sdk.Int)
 	currVals, _ := k.stakingKeeper.GetHistoricalInfo(ctx, height)
-	log.Info("azh|restaking BeginBlock", "currVals len", len(currVals.Valset))
 
 	preVals, _ := k.stakingKeeper.GetHistoricalInfo(ctx, height-1)
 	for _, val := range currVals.Valset {
@@ -30,14 +27,15 @@ func (k Keeper) MintTokenForValidator(ctx sdk.Context, height int64) []abci.Vali
 			if val.OperatorAddress == pre.OperatorAddress {
 				if val.Tokens.LT(pre.Tokens) {
 					valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
-					delVal[valAddr.String()] = pre.Tokens.Sub(val.Tokens)
+					delVal[sdk.AccAddress(valAddr).String()] = pre.Tokens.Sub(val.Tokens)
 				}
 				exist = true
 				break
 			}
 		}
 		if !exist {
-			updateVal[val.OperatorAddress] = val.Tokens
+			valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
+			updateVal[sdk.AccAddress(valAddr).String()] = val.Tokens
 		}
 	}
 
@@ -51,29 +49,24 @@ func (k Keeper) MintTokenForValidator(ctx sdk.Context, height int64) []abci.Vali
 		}
 		if !exist {
 			valAddr, _ := sdk.ValAddressFromBech32(pres.OperatorAddress)
-			delVal[valAddr.String()] = pres.Tokens
+			delVal[sdk.AccAddress(valAddr).String()] = pres.Tokens
 		}
 	}
 
 	for val, amount := range updateVal {
-		valAdr, _ := sdk.ValAddressFromBech32(val)
 		if _, found := k.GetValidatorToken(ctx, val); found {
 			continue
 		}
 		coins := sdk.NewInt64Coin("token", amount.Int64())
-		log.Info("azh|restaking BeginBlock", "accAddr", sdk.AccAddress(valAdr))
-		k.MintTokens(ctx, sdk.AccAddress(valAdr), coins)
+		accAddr, _ := sdk.AccAddressFromBech32(val)
+		k.MintTokens(ctx, accAddr, coins)
 	}
 
-	lens := len(delVal)
-
-	k.Logger(ctx).Info("azh|MintTokenForValidator", "delVal", lens)
-
 	for val, amount := range delVal {
-		valAdr, _ := sdk.ValAddressFromBech32(val)
 		if valToken, found := k.GetValidatorToken(ctx, val); found {
 			amt := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), amount)
-			k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAdr), "restaking", sdk.NewCoins(amt))
+			accAdr, _ := sdk.AccAddressFromBech32(val)
+			k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAdr, "restaking", sdk.NewCoins(amt))
 			valToken.Total -= amount.Uint64()
 			valToken.Available = amount.Uint64()
 			k.SetValidatorToken(ctx, valToken)
