@@ -21,6 +21,7 @@ service Msg {
   rpc CreateValidator (MsgCreateValidator) returns (MsgCreateValidatorResponse);
   rpc SendRetireShare (MsgSendRetireShare) returns (MsgSendRetireShareResponse);
   rpc SendUndelegate  (MsgSendUndelegate ) returns (MsgSendUndelegateResponse );
+  rpc WithdrawToken   (MsgWithdrawToken  ) returns (MsgWithdrawTokenResponse  );
 }
 message MsgSendCreatePair {
   string sourceDenom      = 5;
@@ -125,3 +126,11 @@ message MsgSendUndelegate {
 }
 
 message MsgSendUndelegateResponse {}
+
+message MsgWithdrawToken {
+  string creator = 1;
+  lightmos.base.Coin                 value               =  7 [(gogoproto.nullable)  = false                 ] ;
+}
+
+message MsgWithdrawTokenResponse {}
+

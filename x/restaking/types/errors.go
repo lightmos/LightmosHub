@@ -24,4 +24,7 @@ var (
 	ErrSelfDelegationBelowMinimum    = sdkerrors.Register(ModuleName, 16, "validator's self delegation must be greater than their minimum self delegation")
 	ErrRetireNotFound                = sdkerrors.Register(ModuleName, 17, "retire not found")
 	ErrTokenTooLarge                 = sdkerrors.Register(ModuleName, 18, "token is too large")
+	ErrValidatorNotFound             = sdkerrors.Register(ModuleName, 30, "validator not found")
+	ErrExceedBondedAmount            = sdkerrors.Register(ModuleName, 31, "exceed bonded amount")
+	ErrExceedBalance                 = sdkerrors.Register(ModuleName, 32, "exceed balance")
 )

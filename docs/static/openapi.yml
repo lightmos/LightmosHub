@@ -48026,9 +48026,8 @@ paths:
                 items:
                   type: object
                   properties:
-                    id:
+                    address:
                       type: string
-                      format: uint64
                     total:
                       type: string
                       format: uint64
@@ -48307,7 +48306,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /lightmos/restaking/validator_token/{id}:
+  /lightmos/restaking/validator_token/{address}:
     get:
       summary: Queries a list of ValidatorToken items.
       operationId: LightmosRestakingValidatorToken
@@ -48320,9 +48319,8 @@ paths:
               ValidatorToken:
                 type: object
                 properties:
-                  id:
+                  address:
                     type: string
-                    format: uint64
                   total:
                     type: string
                     format: uint64
@@ -48515,11 +48513,10 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: id
+        - name: address
           in: path
           required: true
           type: string
-          format: uint64
       tags:
         - Query
 definitions:
@@ -77337,6 +77334,8 @@ definitions:
     type: object
   lightmos.restaking.MsgSendUndelegateResponse:
     type: object
+  lightmos.restaking.MsgWithdrawTokenResponse:
+    type: object
   lightmos.restaking.Order:
     type: object
     properties:
@@ -77550,9 +77549,8 @@ definitions:
         items:
           type: object
           properties:
-            id:
+            address:
               type: string
-              format: uint64
             total:
               type: string
               format: uint64
@@ -77673,9 +77671,8 @@ definitions:
       ValidatorToken:
         type: object
         properties:
-          id:
+          address:
             type: string
-            format: uint64
           total:
             type: string
             format: uint64
@@ -77723,9 +77720,8 @@ definitions:
   lightmos.restaking.ValidatorToken:
     type: object
     properties:
-      id:
+      address:
         type: string
-        format: uint64
       total:
         type: string
         format: uint64
