@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"errors"
 	"lightmos/x/restaking/types"
 
@@ -63,7 +64,7 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 	if err = k.BurnTokens(ctx, recipientAcc.GetAddress(), coins); err != nil {
 		return packetAck, err
 	}
-	if vt.Total.Int64() == int64(retire) {
+	if vt.Available.Int64() == int64(retire) && vt.Total.Equal(math.ZeroInt()) {
 		k.RemoveValidatorToken(ctx, accAddr.String())
 	} else {
 		vt.Available.Sub(sdk.NewInt(int64(retire)))
