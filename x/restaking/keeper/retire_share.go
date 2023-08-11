@@ -56,17 +56,17 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 		return packetAck, err
 	}
 	del, retire := k.DescHistory(ctx, "token", demo, data.ValidatorAddress, int32(data.Amount.Amount.Int64()))
-	if !del || int64(retire) > amount.Amount.Int64() || uint64(retire) > vt.Available {
+	if !del || int64(retire) > amount.Amount.Int64() || int64(retire) > vt.Available.Int64() {
 		return packetAck, errors.New("not exist buy sell")
 	}
 	coins := sdk.NewCoin(demo, sdk.NewInt(int64(retire)))
 	if err = k.BurnTokens(ctx, recipientAcc.GetAddress(), coins); err != nil {
 		return packetAck, err
 	}
-	if vt.Total == uint64(retire) {
+	if vt.Total.Int64() == int64(retire) {
 		k.RemoveValidatorToken(ctx, accAddr.String())
 	} else {
-		vt.Available -= uint64(retire)
+		vt.Available.Sub(sdk.NewInt(int64(retire)))
 		k.SetValidatorToken(ctx, vt)
 	}
 	k.Logger(ctx).Info("azh|OnRecvUndelegatePacket burn success")

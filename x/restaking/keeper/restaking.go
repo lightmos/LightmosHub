@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	"errors"
 	"lightmos/x/restaking/types"
 
@@ -15,64 +16,27 @@ import (
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 )
 
-func (k Keeper) MintTokenForValidator(ctx sdk.Context, height int64) []abci.ValidatorUpdate {
-	updateVal := make(map[string]sdk.Int)
-	delVal := make(map[string]sdk.Int)
-	currVals, _ := k.stakingKeeper.GetHistoricalInfo(ctx, height)
-
-	preVals, _ := k.stakingKeeper.GetHistoricalInfo(ctx, height-1)
-	for _, val := range currVals.Valset {
-		var exist bool
-		for _, pre := range preVals.Valset {
-			if val.OperatorAddress == pre.OperatorAddress {
-				if val.Tokens.LT(pre.Tokens) {
-					valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
-					delVal[sdk.AccAddress(valAddr).String()] = pre.Tokens.Sub(val.Tokens)
-				}
-				exist = true
-				break
+func (k Keeper) RestakeUndelegate(ctx sdk.Context) []abci.ValidatorUpdate {
+	shareVals := k.GetAllValidatorToken(ctx)
+	for _, shareVal := range shareVals {
+		accAddr, _ := sdk.AccAddressFromBech32(shareVal.Address)
+		if val, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(accAddr)); found {
+			if val.Tokens.LT(shareVal.Total) {
+				retire := shareVal.Total.Sub(val.Tokens)
+				amt := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), retire)
+				k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
+				shareVal.Available = retire
+				shareVal.Total = val.Tokens
+				k.SetValidatorToken(ctx, shareVal)
 			}
-		}
-		if !exist {
-			valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
-			updateVal[sdk.AccAddress(valAddr).String()] = val.Tokens
-		}
-	}
-
-	for _, pres := range preVals.Valset {
-		var exist bool
-		for _, vals := range currVals.Valset {
-			if vals.OperatorAddress == pres.OperatorAddress {
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			valAddr, _ := sdk.ValAddressFromBech32(pres.OperatorAddress)
-			delVal[sdk.AccAddress(valAddr).String()] = pres.Tokens
+		} else if shareVal.Total.GT(math.ZeroInt()) {
+			amt := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), shareVal.Total)
+			k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
+			shareVal.Available = shareVal.Total
+			shareVal.Total = math.ZeroInt()
+			k.SetValidatorToken(ctx, shareVal)
 		}
 	}
-
-	for val, amount := range updateVal {
-		if _, found := k.GetValidatorToken(ctx, val); found {
-			continue
-		}
-		coins := sdk.NewInt64Coin("token", amount.Int64())
-		accAddr, _ := sdk.AccAddressFromBech32(val)
-		k.MintTokens(ctx, accAddr, coins)
-	}
-
-	for val, amount := range delVal {
-		if valToken, found := k.GetValidatorToken(ctx, val); found {
-			amt := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), amount)
-			accAdr, _ := sdk.AccAddressFromBech32(val)
-			k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAdr, "restaking", sdk.NewCoins(amt))
-			valToken.Total -= amount.Uint64()
-			valToken.Available = amount.Uint64()
-			k.SetValidatorToken(ctx, valToken)
-		}
-	}
-
 	return []abci.ValidatorUpdate{}
 }
 
@@ -162,8 +126,9 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 	}
 
 	vt := types.ValidatorToken{
-		Address: data.Restaker,
-		Total:   data.Value.Amount.Uint64(),
+		Address:   data.Restaker,
+		Total:     data.Value.Amount,
+		Available: math.ZeroInt(),
 	}
 	k.SetValidatorToken(ctx, vt)
 	logger.Info("carver|recv restake handle succeed", "restaker", restaker, "denom", data.Value.Denom)

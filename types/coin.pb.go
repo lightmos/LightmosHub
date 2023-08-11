@@ -6,10 +6,10 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
-	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	math "math"
 	math_bits "math/bits"
 )
