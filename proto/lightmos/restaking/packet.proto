@@ -14,25 +14,15 @@ option go_package = "lightmos/x/restaking/types";
 message RestakingPacketData {
   oneof packet {
     NoData                noData            = 1;
-    CreatePairPacketData  createPairPacket  = 2;
-    SellOrderPacketData   sellOrderPacket   = 3;
-    BuyOrderPacketData    buyOrderPacket    = 4;
-    RestakePacketData     restakePacket     = 5;
-    UndelegatePacketData  undelegatePacket  = 6;
-    RetireSharePacketData retireSharePacket = 7;
+    SellOrderPacketData   sellOrderPacket   = 2;
+    BuyOrderPacketData    buyOrderPacket    = 3;
+    RestakePacketData     restakePacket     = 4;
+    UndelegatePacketData  undelegatePacket  = 5;
+    RetireSharePacketData retireSharePacket = 6;
   }
 }
 
 message NoData {}
-
-// CreatePairPacketData defines a struct for the packet payload
-message CreatePairPacketData {
-  string sourceDenom = 1;
-  string targetDenom = 2;
-}
-
-// CreatePairPacketAck defines a struct for the packet acknowledgment
-message CreatePairPacketAck {}
 
 // SellOrderPacketData defines a struct for the packet payload
 message SellOrderPacketData {

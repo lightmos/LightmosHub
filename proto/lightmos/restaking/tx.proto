@@ -13,7 +13,6 @@ option go_package = "lightmos/x/restaking/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc SendCreatePair  (MsgSendCreatePair ) returns (MsgSendCreatePairResponse );
   rpc SendSellOrder   (MsgSendSellOrder  ) returns (MsgSendSellOrderResponse  );
   rpc SendBuyOrder    (MsgSendBuyOrder   ) returns (MsgSendBuyOrderResponse   );
   rpc CancelSellOrder (MsgCancelSellOrder) returns (MsgCancelSellOrderResponse);
@@ -23,16 +22,6 @@ service Msg {
   rpc SendUndelegate  (MsgSendUndelegate ) returns (MsgSendUndelegateResponse );
   rpc WithdrawToken   (MsgWithdrawToken  ) returns (MsgWithdrawTokenResponse  );
 }
-message MsgSendCreatePair {
-  string sourceDenom      = 5;
-  string targetDenom      = 6;
-  string creator          = 1;
-  string port             = 2;
-  string channelID        = 3;
-  uint64 timeoutTimestamp = 4;
-}
-
-message MsgSendCreatePairResponse {}
 
 message MsgSendSellOrder {
   string amountDenom      = 5;

@@ -8,7 +8,6 @@ import (
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSendCreatePair{}, "restaking/SendCreatePair", nil)
 	cdc.RegisterConcrete(&MsgSendSellOrder{}, "restaking/SendSellOrder", nil)
 	cdc.RegisterConcrete(&MsgSendBuyOrder{}, "restaking/SendBuyOrder", nil)
 	cdc.RegisterConcrete(&MsgCancelSellOrder{}, "restaking/CancelSellOrder", nil)
@@ -20,9 +19,6 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgSendCreatePair{},
-	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSendSellOrder{},
 	)

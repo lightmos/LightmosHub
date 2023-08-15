@@ -7,7 +7,7 @@ import (
 
 const TypeMsgSendSellOrder = "send_sell_order"
 
-var _ sdk.Msg = &MsgSendSellOrder{}
+//var _ sdk.Msg = &MsgSendSellOrder{}
 
 func NewMsgSendSellOrder(
 	creator string,

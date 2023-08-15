@@ -12,14 +12,7 @@ import (
 func (k msgServer) SendBuyOrder(goCtx context.Context, msg *types.MsgSendBuyOrder) (*types.MsgSendBuyOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// Cannot send a order if the pair doesn't exist
-	//pairIndex := types.OrderBookIndex(msg.Port, msg.ChannelID, msg.AmountDenom, msg.PriceDenom)
-	//_, found := k.GetBuyOrderBook(ctx, pairIndex)
-	//if !found {
-	//	return &types.MsgSendBuyOrderResponse{}, errors.New("the pair doesn't exist")
-	//}
-	demo := k.stakingKeeper.BondDenom(ctx)
-	if demo != msg.PriceDenom {
+	if msg.PriceDenom != "token" {
 		return &types.MsgSendBuyOrderResponse{}, errors.New("invalid price demo")
 	}
 
