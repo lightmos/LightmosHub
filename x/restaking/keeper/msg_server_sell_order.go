@@ -6,6 +6,7 @@ import (
 
 	"lightmos/x/restaking/types"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,12 +23,35 @@ func (k msgServer) SendSellOrder(goCtx context.Context, msg *types.MsgSendSellOr
 	}
 
 	// The denom sending the sales order must be consistent with the amountDenom in the pair
-	if sellOrderBook.AmountDenom != msg.AmountDenom {
+	if sellOrderBook.AmountDenom != msg.AmountDenom ||
+		k.stakingKeeper.BondDenom(ctx) != sellOrderBook.AmountDenom {
 		return &types.MsgSendSellOrderResponse{}, errors.New("invalid amount denom")
 	}
 
-	// Get sender's address
+	// creator must be gov module account
 	sender, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return &types.MsgSendSellOrderResponse{}, err
+	}
+
+	govAcc := k.accountKeeper.GetModuleAccount(ctx, "gov")
+	if !sender.Equals(govAcc.GetAddress()) {
+		return &types.MsgSendSellOrderResponse{}, errors.New("creator must be gov account")
+	}
+
+	var shouldMint sdkmath.Int
+	if len(sellOrderBook.Book.Orders) == 0 {
+		shouldMint = sdkmath.NewInt(int64(msg.Amount))
+	} else {
+		remainingAmt := sellOrderBook.Book.Orders[0].Amount
+		if remainingAmt < msg.Amount {
+			shouldMint = sdkmath.NewInt(int64(msg.Amount - remainingAmt))
+		} else {
+			shouldMint = sdkmath.NewInt(int64(msg.Amount))
+		}
+	}
+
+	err = k.MintTokens(ctx, govAcc.GetAddress(), sdk.NewCoin(msg.AmountDenom, shouldMint))
 	if err != nil {
 		return &types.MsgSendSellOrderResponse{}, err
 	}
