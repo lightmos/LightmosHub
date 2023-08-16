@@ -13,7 +13,7 @@ func (k msgServer) SendBuyOrder(goCtx context.Context, msg *types.MsgSendBuyOrde
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if msg.PriceDenom != "token" {
-		return &types.MsgSendBuyOrderResponse{}, errors.New("invalid price demo")
+		return &types.MsgSendBuyOrderResponse{}, errors.New("invalid price demo" + msg.PriceDenom)
 	}
 
 	// Lock the token to send

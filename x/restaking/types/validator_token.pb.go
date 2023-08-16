@@ -6,10 +6,10 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
+	types "lightmos/types"
 	math "math"
 	math_bits "math/bits"
 )
@@ -26,9 +26,10 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type ValidatorToken struct {
-	Address   string                                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
-	Total     github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=total,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"total"`
-	Available github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=available,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"available"`
+	Address   string      `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Total     *types.Coin `protobuf:"bytes,2,opt,name=total,proto3" json:"total,omitempty"`
+	Retire    *types.Coin `protobuf:"bytes,3,opt,name=retire,proto3" json:"retire,omitempty"`
+	Available *types.Coin `protobuf:"bytes,4,opt,name=available,proto3" json:"available,omitempty"`
 }
 
 func (m *ValidatorToken) Reset()         { *m = ValidatorToken{} }
@@ -71,6 +72,27 @@ func (m *ValidatorToken) GetAddress() string {
 	return ""
 }
 
+func (m *ValidatorToken) GetTotal() *types.Coin {
+	if m != nil {
+		return m.Total
+	}
+	return nil
+}
+
+func (m *ValidatorToken) GetRetire() *types.Coin {
+	if m != nil {
+		return m.Retire
+	}
+	return nil
+}
+
+func (m *ValidatorToken) GetAvailable() *types.Coin {
+	if m != nil {
+		return m.Available
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*ValidatorToken)(nil), "lightmos.restaking.ValidatorToken")
 }
@@ -80,24 +102,23 @@ func init() {
 }
 
 var fileDescriptor_8512cd1427318303 = []byte{
-	// 258 bytes of a gzipped FileDescriptorProto
+	// 256 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xd2, 0xc8, 0xc9, 0x4c, 0xcf,
 	0x28, 0xc9, 0xcd, 0x2f, 0xd6, 0x2f, 0x4a, 0x2d, 0x2e, 0x49, 0xcc, 0xce, 0xcc, 0x4b, 0xd7, 0x2f,
 	0x4b, 0xcc, 0xc9, 0x4c, 0x49, 0x2c, 0xc9, 0x2f, 0x8a, 0x2f, 0xc9, 0xcf, 0x4e, 0xcd, 0xd3, 0x2b,
 	0x28, 0xca, 0x2f, 0xc9, 0x17, 0x12, 0x82, 0xa9, 0xd4, 0x83, 0xab, 0x94, 0x92, 0x4c, 0xce, 0x2f,
 	0xce, 0xcd, 0x2f, 0x8e, 0x07, 0xab, 0xd0, 0x87, 0x70, 0x20, 0xca, 0xa5, 0x44, 0xd2, 0xf3, 0xd3,
-	0xf3, 0x21, 0xe2, 0x20, 0x16, 0x44, 0x54, 0xe9, 0x16, 0x23, 0x17, 0x5f, 0x18, 0xcc, 0xf8, 0x10,
-	0x90, 0xe9, 0x42, 0x12, 0x5c, 0xec, 0x89, 0x29, 0x29, 0x45, 0xa9, 0xc5, 0xc5, 0x12, 0x8c, 0x0a,
-	0x8c, 0x1a, 0x9c, 0x41, 0x30, 0xae, 0x50, 0x10, 0x17, 0x6b, 0x49, 0x7e, 0x49, 0x62, 0x8e, 0x04,
-	0x13, 0x48, 0xdc, 0xc9, 0xe6, 0xc4, 0x3d, 0x79, 0x86, 0x5b, 0xf7, 0xe4, 0xd5, 0xd2, 0x33, 0x4b,
-	0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xa1, 0x56, 0x42, 0x29, 0xdd, 0xe2, 0x94, 0x6c, 0xfd,
-	0x92, 0xca, 0x82, 0xd4, 0x62, 0x3d, 0xcf, 0xbc, 0x92, 0x4b, 0x5b, 0x74, 0xb9, 0xa0, 0x2e, 0xf2,
-	0xcc, 0x2b, 0x09, 0x82, 0x18, 0x25, 0x14, 0xc5, 0xc5, 0x99, 0x58, 0x96, 0x98, 0x99, 0x93, 0x98,
-	0x94, 0x93, 0x2a, 0xc1, 0x4c, 0x05, 0x73, 0x11, 0xc6, 0x39, 0x99, 0x9c, 0x78, 0x24, 0xc7, 0x78,
-	0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7,
-	0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x14, 0x3c, 0x94, 0x2b, 0x90, 0xc2, 0x19, 0x6c, 0x64, 0x12,
-	0x1b, 0x38, 0x64, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x61, 0x4c, 0x0c, 0x03, 0x8a, 0x01,
-	0x00, 0x00,
+	0xf3, 0x21, 0xe2, 0x20, 0x16, 0x54, 0x54, 0x02, 0x6e, 0x5d, 0x52, 0x62, 0x71, 0xaa, 0x7e, 0x72,
+	0x7e, 0x26, 0xd4, 0x78, 0xa5, 0xad, 0x8c, 0x5c, 0x7c, 0x61, 0x30, 0x8b, 0x43, 0x40, 0xf6, 0x0a,
+	0x49, 0x70, 0xb1, 0x27, 0xa6, 0xa4, 0x14, 0xa5, 0x16, 0x17, 0x4b, 0x30, 0x2a, 0x30, 0x6a, 0x70,
+	0x06, 0xc1, 0xb8, 0x42, 0x9a, 0x5c, 0xac, 0x25, 0xf9, 0x25, 0x89, 0x39, 0x12, 0x4c, 0x0a, 0x8c,
+	0x1a, 0xdc, 0x46, 0xc2, 0x7a, 0x70, 0xb7, 0x81, 0x8c, 0xd5, 0x73, 0xce, 0xcf, 0xcc, 0x0b, 0x82,
+	0xa8, 0x10, 0xd2, 0xe6, 0x62, 0x2b, 0x4a, 0x2d, 0xc9, 0x2c, 0x4a, 0x95, 0x60, 0xc6, 0xad, 0x16,
+	0xaa, 0x44, 0xc8, 0x90, 0x8b, 0x33, 0xb1, 0x2c, 0x31, 0x33, 0x27, 0x31, 0x29, 0x27, 0x55, 0x82,
+	0x05, 0xb7, 0x7a, 0x84, 0x2a, 0x27, 0x93, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c,
+	0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63,
+	0x88, 0x92, 0x82, 0xfb, 0xb5, 0x02, 0x29, 0x70, 0x4b, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0,
+	0x9e, 0x36, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0xb4, 0x71, 0x3e, 0x0e, 0x7f, 0x01, 0x00, 0x00,
 }
 
 func (m *ValidatorToken) Marshal() (dAtA []byte, err error) {
@@ -120,26 +141,42 @@ func (m *ValidatorToken) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	{
-		size := m.Available.Size()
-		i -= size
-		if _, err := m.Available.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
+	if m.Available != nil {
+		{
+			size, err := m.Available.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintValidatorToken(dAtA, i, uint64(size))
 		}
-		i = encodeVarintValidatorToken(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x22
 	}
-	i--
-	dAtA[i] = 0x1a
-	{
-		size := m.Total.Size()
-		i -= size
-		if _, err := m.Total.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
+	if m.Retire != nil {
+		{
+			size, err := m.Retire.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintValidatorToken(dAtA, i, uint64(size))
 		}
-		i = encodeVarintValidatorToken(dAtA, i, uint64(size))
+		i--
+		dAtA[i] = 0x1a
 	}
-	i--
-	dAtA[i] = 0x12
+	if m.Total != nil {
+		{
+			size, err := m.Total.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintValidatorToken(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
 	if len(m.Address) > 0 {
 		i -= len(m.Address)
 		copy(dAtA[i:], m.Address)
@@ -171,10 +208,18 @@ func (m *ValidatorToken) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovValidatorToken(uint64(l))
 	}
-	l = m.Total.Size()
-	n += 1 + l + sovValidatorToken(uint64(l))
-	l = m.Available.Size()
-	n += 1 + l + sovValidatorToken(uint64(l))
+	if m.Total != nil {
+		l = m.Total.Size()
+		n += 1 + l + sovValidatorToken(uint64(l))
+	}
+	if m.Retire != nil {
+		l = m.Retire.Size()
+		n += 1 + l + sovValidatorToken(uint64(l))
+	}
+	if m.Available != nil {
+		l = m.Available.Size()
+		n += 1 + l + sovValidatorToken(uint64(l))
+	}
 	return n
 }
 
@@ -249,7 +294,7 @@ func (m *ValidatorToken) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowValidatorToken
@@ -259,21 +304,23 @@ func (m *ValidatorToken) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthValidatorToken
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthValidatorToken
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
+			}
+			if m.Total == nil {
+				m.Total = &types.Coin{}
 			}
 			if err := m.Total.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -281,9 +328,9 @@ func (m *ValidatorToken) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Available", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Retire", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowValidatorToken
@@ -293,21 +340,59 @@ func (m *ValidatorToken) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthValidatorToken
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthValidatorToken
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
+			}
+			if m.Retire == nil {
+				m.Retire = &types.Coin{}
+			}
+			if err := m.Retire.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Available", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowValidatorToken
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthValidatorToken
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthValidatorToken
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Available == nil {
+				m.Available = &types.Coin{}
 			}
 			if err := m.Available.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

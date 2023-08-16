@@ -3,19 +3,13 @@ package lightmos.restaking;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "lightmos/base/coin.proto";
 
 option go_package = "lightmos/x/restaking/types";
 
 message ValidatorToken {
   string address = 1;
-  string total = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false
-  ];
-  string available = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable)   = false
-  ];
+  lightmos.base.Coin total = 2;
+  lightmos.base.Coin retire = 3;
+  lightmos.base.Coin available = 4;
 }

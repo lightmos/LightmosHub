@@ -82,6 +82,18 @@ func (k Keeper) OnRecvBuyOrderPacket(ctx sdk.Context, packet channeltypes.Packet
 		return packetAck, err
 	}
 
+	if err = k.UpdateDoneHistory(
+		ctx,
+		data.AmountDenom,
+		data.PriceDenom,
+		data.Buyer,
+		liquidation.Creator,
+		liquidation.Price,
+		liquidation.Amount,
+	); err != nil {
+		return packetAck, err
+	}
+
 	packetAck.Seller = liquidation.Creator
 
 	// Save the new order book

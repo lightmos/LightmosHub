@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"errors"
 	"lightmos/x/restaking/types"
 
@@ -10,7 +9,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
-	restakingtypes "lightmos/x/restaking/types"
 )
 
 // TransmitRetireSharePacket transmits the packet over IBC with the specified source port and source channel
@@ -47,29 +45,25 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 	if !found {
 		return packetAck, errors.New("not found")
 	}
-	recipientAcc := k.accountKeeper.GetModuleAccount(ctx, restakingtypes.ModuleName)
-	if recipientAcc == nil {
-		return packetAck, sdkerrors.Wrapf(sdkerrors.ErrUnknownAddress, "module account %s does not exist", restakingtypes.ModuleName)
-	}
-	demo := k.stakingKeeper.BondDenom(ctx)
-	amount := k.bankKeeper.GetBalance(ctx, recipientAcc.GetAddress(), demo)
-	if err != nil {
-		return packetAck, err
-	}
-	del, retire := k.DescHistory(ctx, "token", demo, data.ValidatorAddress, int32(data.Amount.Amount.Int64()))
-	if !del || int64(retire) > amount.Amount.Int64() || int64(retire) > vt.Available.Int64() {
-		return packetAck, errors.New("not exist buy sell")
-	}
-	coins := sdk.NewCoin(demo, sdk.NewInt(int64(retire)))
-	if err = k.BurnTokens(ctx, recipientAcc.GetAddress(), coins); err != nil {
-		return packetAck, err
-	}
-	if vt.Available.Int64() == int64(retire) && vt.Total.Equal(math.ZeroInt()) {
-		k.RemoveValidatorToken(ctx, accAddr.String())
+	if vt.Available.IsLT(*data.Amount) {
+		return packetAck, errors.New("retire token is too large")
 	} else {
-		vt.Available.Sub(sdk.NewInt(int64(retire)))
-		k.SetValidatorToken(ctx, vt)
+		coin := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), vt.Retire.Amount)
+		if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin)); err != nil {
+			return packetAck, err
+		}
+
+		vt.Retire = nil
+
+		if vt.Available.IsEqual(*data.Amount) {
+			k.RemoveValidatorToken(ctx, accAddr.String())
+		} else {
+			avaCoin := vt.Available.Sub(*data.Amount)
+			vt.Available = &avaCoin
+			k.SetValidatorToken(ctx, vt)
+		}
 	}
+
 	k.Logger(ctx).Info("azh|OnRecvUndelegatePacket burn success")
 	packetAck.Step = 1
 	return packetAck, nil
