@@ -20,41 +20,39 @@ func (k Keeper) RestakeUndelegate(ctx sdk.Context) []abci.ValidatorUpdate {
 	shareVals := k.GetAllValidatorToken(ctx)
 	for _, shareVal := range shareVals {
 		accAddr, _ := sdk.AccAddressFromBech32(shareVal.Address)
-		demo := k.stakingKeeper.BondDenom(ctx)
 		if val, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(accAddr)); found {
 			if val.Tokens.LT(shareVal.Total.Amount) {
+				demo := k.stakingKeeper.BondDenom(ctx)
 				retire := shareVal.Total.Amount.Sub(val.Tokens)
-				amt := sdk.NewCoin(demo, retire)
 				bal := k.bankKeeper.GetBalance(ctx, accAddr, demo)
-				if bal.IsGTE(amt) {
-					k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
-					del, retireToken := k.DescHistory(ctx, k.stakingKeeper.BondDenom(ctx), "token", shareVal.Address, int32(retire.Int64()))
+				if bal.Amount.GTE(retire) {
+					del, retireToken := k.DescHistory(ctx, demo, "token", shareVal.Address, int32(retire.Int64()))
 					if !del {
 						return []abci.ValidatorUpdate{}
 					}
-					totalCoin := ty.NewCoin(demo, val.Tokens)
-					shareVal.Total = &totalCoin
-					retireCoin := ty.NewCoin(demo, retire)
-					shareVal.Retire = &retireCoin
-					avaCoin := ty.NewCoin("token", sdk.NewInt(int64(retireToken)))
-					shareVal.Available = &avaCoin
+					//lock undelegate
+					amt := sdk.NewCoin(demo, retire)
+					k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
+					//update validate token history
+					shareVal.Total.Amount = val.Tokens
+					shareVal.Retire.Amount = shareVal.Retire.Amount.Add(retire)
+					shareVal.Available.Amount = shareVal.Available.Amount.Add(sdk.NewInt(int64(retireToken)))
 					k.SetValidatorToken(ctx, shareVal)
 				}
 			}
 		} else if !shareVal.Total.IsZero() {
+			demo := k.stakingKeeper.BondDenom(ctx)
 			amt := sdk.NewCoin(demo, shareVal.Total.Amount)
 			bal := k.bankKeeper.GetBalance(ctx, accAddr, demo)
 			if bal.IsGTE(amt) {
-				k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
 				del, retireToken := k.DescHistory(ctx, k.stakingKeeper.BondDenom(ctx), "token", shareVal.Address, int32(shareVal.Total.Amount.Int64()))
 				if !del {
 					return []abci.ValidatorUpdate{}
 				}
-				retireCoin := ty.NewCoin(demo, shareVal.Retire.Amount.Add(shareVal.Total.Amount))
-				shareVal.Retire = &retireCoin
-				avaCoin := ty.NewCoin("token", shareVal.Available.Amount.Add(sdk.NewInt(int64(retireToken))))
-				shareVal.Available = &avaCoin
-				shareVal.Total = nil
+				k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
+				shareVal.Retire.Amount = shareVal.Retire.Amount.Add(shareVal.Total.Amount)
+				shareVal.Available.Amount = shareVal.Available.Amount.Add(sdk.NewInt(int64(retireToken)))
+				shareVal.Total.Amount = sdk.ZeroInt()
 				k.SetValidatorToken(ctx, shareVal)
 			}
 		}
@@ -147,10 +145,14 @@ func (k Keeper) OnRecvRestakePacket(ctx sdk.Context, packet channeltypes.Packet,
 		return packetAck, err
 	}
 
-	coin := ty.NewCoin(k.stakingKeeper.BondDenom(ctx), data.Value.Amount)
+	totalCoin := ty.NewCoin(k.stakingKeeper.BondDenom(ctx), data.Value.Amount)
+	retireCoin := ty.NewCoin(k.stakingKeeper.BondDenom(ctx), sdk.ZeroInt())
+	avaCoin := ty.NewCoin("token", sdk.ZeroInt())
 	vt := types.ValidatorToken{
-		Address: data.Restaker,
-		Total:   &coin,
+		Address:   data.Restaker,
+		Total:     &totalCoin,
+		Retire:    &retireCoin,
+		Available: &avaCoin,
 	}
 	k.SetValidatorToken(ctx, vt)
 	logger.Info("carver|recv restake handle succeed", "restaker", restaker, "denom", data.Value.Denom)

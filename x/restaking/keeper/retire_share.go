@@ -48,14 +48,15 @@ func (k Keeper) OnRecvRetireSharePacket(ctx sdk.Context, packet channeltypes.Pac
 	if vt.Available.IsLT(*data.Amount) {
 		return packetAck, errors.New("retire token is too large")
 	} else {
-		coin := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), vt.Retire.Amount)
-		if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin)); err != nil {
-			return packetAck, err
+		if !vt.Retire.IsZero() {
+			coin := sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), vt.Retire.Amount)
+			if err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(coin)); err != nil {
+				return packetAck, err
+			}
+			vt.Retire.Amount = sdk.ZeroInt()
 		}
 
-		vt.Retire = nil
-
-		if vt.Available.IsEqual(*data.Amount) {
+		if vt.Available.IsEqual(*data.Amount) && vt.Total.IsZero() {
 			k.RemoveValidatorToken(ctx, accAddr.String())
 		} else {
 			avaCoin := vt.Available.Sub(*data.Amount)
