@@ -18,8 +18,6 @@ import (
 var (
 	ShareUnbondingDelegationKey           = []byte{0x64}
 	ShareUnbondingIDKey                   = []byte{0x65}
-	ShareUnbondingIndexKey                = []byte{0x66}
-	ShareUnbondingTypeKey                 = []byte{0x67}
 	ShareUnbondingDelegationByValIndexKey = []byte{0x68}
 	ShareUnbondingQueueKey                = []byte{0x69}
 )
@@ -54,7 +52,6 @@ func (k Keeper) OnRecvUndelegatePacket(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	// TODO: packet reception logic
-	//log := k.Logger(ctx)
 	accAddr, _ := sdk.AccAddressFromBech32(data.ValidatorAddress)
 	valAddr := sdk.ValAddress(accAddr)
 	bondDenom := k.stakingKeeper.BondDenom(ctx)
@@ -99,7 +96,6 @@ func (k Keeper) OnAcknowledgementUndelegatePacket(ctx sdk.Context, packet channe
 		}
 
 		// TODO: successful acknowledgement logic
-		log.Info("azh|OnAcknowledgementRetireSharePacket", "dispatchedAck", packetAck.Step)
 		if packetAck.Step == 1 {
 			log.Info("azh|OnAcknowledgementRetireSharePacket unbound")
 		}
@@ -136,10 +132,9 @@ func (k Keeper) CompleteShareUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, 
 	// loop through all the entries and complete unbonding mature entries
 	for i := 0; i < len(ubd.Entries); i++ {
 		entry := ubd.Entries[i]
-		if entry.IsMature(ctxTime) && !entry.OnHold() {
+		if entry.IsMature(ctxTime) {
 			ubd.RemoveEntry(int64(i))
 			i--
-			k.DeleteShareUnbondingIndex(ctx, entry.UnbondingId)
 
 			// track undelegation only when remaining or truncated shares are non-zero
 			if !entry.Balance.IsZero() {
@@ -178,9 +173,6 @@ func (k Keeper) SetShareUnbondingDelegationEntry(
 	}
 
 	k.SetShareUnbondingDelegation(ctx, ubd)
-
-	// Add to the UBDByUnbondingOp index to look up the UBD by the UBDE ID
-	k.SetShareUnbondingDelegationByUnbondingID(ctx, ubd, id)
 
 	return ubd
 }
@@ -282,36 +274,6 @@ func (k Keeper) IncrementShareUnbondingID(ctx sdk.Context) (unbondingID uint64) 
 	return unbondingID
 }
 
-func (k Keeper) DeleteShareUnbondingIndex(ctx sdk.Context, id uint64) {
-	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetShareUnbondingIndexKey(id))
-}
-
-func (k Keeper) SetShareUnbondingDelegationByUnbondingID(ctx sdk.Context, ubd types.UnbondingDelegation, id uint64) {
-	store := ctx.KVStore(k.storeKey)
-	delAddr := sdk.MustAccAddressFromBech32(ubd.DelegatorAddress)
-	valAddr, err := sdk.ValAddressFromBech32(ubd.ValidatorAddress)
-	if err != nil {
-		panic(err)
-	}
-
-	ubdKey := GetShareUBDKey(delAddr, valAddr)
-	store.Set(GetShareUnbondingIndexKey(id), ubdKey)
-
-	// Set unbonding type so that we know how to deserialize it later
-	k.SetShareUnbondingType(ctx, id, types.UnbondingType_UnbondingDelegation)
-}
-
-func (k Keeper) SetShareUnbondingType(ctx sdk.Context, id uint64, unbondingType types.UnbondingType) {
-	store := ctx.KVStore(k.storeKey)
-
-	// Convert into bytes for storage
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, uint64(unbondingType))
-
-	store.Set(GetShareUnbondingTypeKey(id), bz)
-}
-
 func (k Keeper) GetShareUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time) (dvPairs []types.DVPair) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -332,20 +294,12 @@ func (k Keeper) SetUBDQueueTimeSlice(ctx sdk.Context, timestamp time.Time, keys 
 	store.Set(GetShareUnbondingDelegationTimeKey(timestamp), bz)
 }
 
-func GetShareUnbondingTypeKey(id uint64) []byte {
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, id)
-	return append(ShareUnbondingTypeKey, bz...)
-}
-
-func GetShareUnbondingIndexKey(id uint64) []byte {
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, id)
-	return append(ShareUnbondingIndexKey, bz...)
-}
-
 func GetShareUBDKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetShareUBDsKey(delAddr.Bytes()), address.MustLengthPrefix(valAddr)...)
+}
+
+func GetShareUBDsKey(delAddr sdk.AccAddress) []byte {
+	return append(ShareUnbondingDelegationKey, address.MustLengthPrefix(delAddr)...)
 }
 
 func GetShareUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
@@ -354,10 +308,6 @@ func GetShareUBDByValIndexKey(delAddr sdk.AccAddress, valAddr sdk.ValAddress) []
 
 func GetShareUBDsByValIndexKey(valAddr sdk.ValAddress) []byte {
 	return append(ShareUnbondingDelegationByValIndexKey, address.MustLengthPrefix(valAddr)...)
-}
-
-func GetShareUBDsKey(delAddr sdk.AccAddress) []byte {
-	return append(ShareUnbondingDelegationKey, address.MustLengthPrefix(delAddr)...)
 }
 
 func GetShareUnbondingDelegationTimeKey(timestamp time.Time) []byte {
