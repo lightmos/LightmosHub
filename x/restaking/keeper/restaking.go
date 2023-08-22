@@ -17,44 +17,38 @@ import (
 )
 
 func (k Keeper) RestakeUndelegate(ctx sdk.Context) []abci.ValidatorUpdate {
-	shareVals := k.GetAllValidatorToken(ctx)
-	for _, shareVal := range shareVals {
-		accAddr, _ := sdk.AccAddressFromBech32(shareVal.Address)
-		if val, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(accAddr)); found {
-			if val.Tokens.LT(shareVal.Total.Amount) {
-				demo := k.stakingKeeper.BondDenom(ctx)
-				retire := shareVal.Total.Amount.Sub(val.Tokens)
-				bal := k.bankKeeper.GetBalance(ctx, accAddr, demo)
-				if bal.Amount.GTE(retire) {
-					del, retireToken := k.DescHistory(ctx, demo, "token", shareVal.Address, int32(retire.Int64()))
-					if !del {
-						return []abci.ValidatorUpdate{}
-					}
-					//lock undelegate
-					amt := sdk.NewCoin(demo, retire)
-					k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
-					//update validate token history
-					shareVal.Total.Amount = val.Tokens
-					shareVal.Retire.Amount = shareVal.Retire.Amount.Add(retire)
-					shareVal.Available.Amount = shareVal.Available.Amount.Add(sdk.NewInt(int64(retireToken)))
-					k.SetValidatorToken(ctx, shareVal)
-				}
+	matureUnbonds := k.DequeueAllMatureUBDQueue(ctx, ctx.BlockHeader().Time)
+	for _, dvPair := range matureUnbonds {
+		addr, err := sdk.ValAddressFromBech32(dvPair.ValidatorAddress)
+		if err != nil {
+			panic(err)
+		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(dvPair.DelegatorAddress)
+
+		shareVal, found := k.GetValidatorToken(ctx, delegatorAddress.String())
+
+		if !found {
+			continue
+		}
+
+		balances, err := k.CompleteShareUnbonding(ctx, delegatorAddress, addr)
+		if err != nil {
+			continue
+		}
+
+		for _, balance := range balances {
+			if balance.Denom != k.stakingKeeper.BondDenom(ctx) {
+				continue
 			}
-		} else if !shareVal.Total.IsZero() {
-			demo := k.stakingKeeper.BondDenom(ctx)
-			amt := sdk.NewCoin(demo, shareVal.Total.Amount)
-			bal := k.bankKeeper.GetBalance(ctx, accAddr, demo)
-			if bal.IsGTE(amt) {
-				del, retireToken := k.DescHistory(ctx, k.stakingKeeper.BondDenom(ctx), "token", shareVal.Address, int32(shareVal.Total.Amount.Int64()))
-				if !del {
-					return []abci.ValidatorUpdate{}
-				}
-				k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(amt))
-				shareVal.Retire.Amount = shareVal.Retire.Amount.Add(shareVal.Total.Amount)
-				shareVal.Available.Amount = shareVal.Available.Amount.Add(sdk.NewInt(int64(retireToken)))
-				shareVal.Total.Amount = sdk.ZeroInt()
-				k.SetValidatorToken(ctx, shareVal)
+			del, retireToken := k.DescHistory(ctx, balance.Denom, "token", delegatorAddress.String(), int32(balance.Amount.Int64()))
+			if !del {
+				continue
 			}
+
+			shareVal.Total.Amount = shareVal.Total.Amount.Sub(balance.Amount)
+			shareVal.Retire.Amount = shareVal.Retire.Amount.Add(balance.Amount)
+			shareVal.Available.Amount = shareVal.Available.Amount.Add(sdk.NewInt(int64(retireToken)))
+			k.SetValidatorToken(ctx, shareVal)
 		}
 	}
 	return []abci.ValidatorUpdate{}
